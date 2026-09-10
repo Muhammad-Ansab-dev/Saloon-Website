@@ -1,4 +1,9 @@
 'use client';
+// BestSellers — Product showcase grid displaying the salon's top 4 haircare
+// products with SVG bottle visuals (ProductBottleVisual). On hover, reveals
+// quick-action buttons for "Add to Bag" (with confirmation flash) and "View
+// Details" (opens the product modal). Rendered in the #shop section of the
+// home page to drive e-commerce conversions.
 import React, { useState } from 'react';
 import { Product } from '../types';
 import { ProductBottleVisual } from './ProductBottleVisual';

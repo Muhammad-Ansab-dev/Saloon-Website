@@ -1,4 +1,11 @@
 'use client';
+// TestimonialGrid — 3D coverflow-style client testimonial carousel.
+// Active card is centred; adjacent cards are rotated and scaled via
+// CSS perspective + motion spring transitions. Each card shows a photo,
+// star rating, quote, and author. Rendered by HomePage between
+// TeamSection and VisitUs.
+// Uses motion/react for the coverflow spring animation and arrow buttons.
+
 import React, { useState } from 'react';
 import { Star, ChevronLeft, ChevronRight } from 'lucide-react';
 import { motion } from 'motion/react';

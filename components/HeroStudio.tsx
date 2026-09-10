@@ -1,4 +1,11 @@
 'use client';
+// ─────────────────────────────────────────────────────────────
+// HeroStudio — full-height editorial hero with auto-rotating
+// background slides (7s), prev/next arrows, bottom-left tag
+// badge, indicator dots, and scroll-linked parallax zoom/fade.
+// Legacy component: NOT currently rendered (superseded by
+// VfxHero on the homepage). Keep for reference only.
+// ─────────────────────────────────────────────────────────────
 import React, { useState, useEffect, useRef } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { motion, AnimatePresence, useScroll, useTransform } from 'motion/react';

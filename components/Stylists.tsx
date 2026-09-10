@@ -1,4 +1,11 @@
 'use client';
+// ─────────────────────────────────────────────────────────────
+// Stylists — "Our Professionals / MEET THE EXPERTS" grid card rail.
+// Legacy component: NOT currently rendered by any page (superseded
+// by AboutPage's TEAM section and TeamSection on the homepage).
+// Alternating left/right spring reveals with parallax portraits,
+// first 4 STYLISTS from data/salonData.ts. Keep for reference only.
+// ─────────────────────────────────────────────────────────────
 import React from 'react';
 import { STYLISTS } from '@/data/salonData';
 import { ArrowRight } from 'lucide-react';

@@ -1,4 +1,10 @@
 'use client';
+// PartnerBar — infinite horizontal marquee of brand / partner logos.
+// Sits directly below VfxHero on the homepage, providing social proof
+// via stylised text labels (Bed Head, ArganOil, etc.). Duplicate track
+// creates a seamless CSS-free loop. Rendered by HomePage.
+// Uses motion/react for the infinite x-translation animation.
+
 import React from 'react';
 import { Scissors, Sparkles, Waves } from 'lucide-react';
 import { motion } from 'motion/react';

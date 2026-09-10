@@ -1,3 +1,9 @@
+// ─────────────────────────────────────────────────────────────
+// types.ts — shared TypeScript interfaces for the whole site.
+// Mirrors the shapes of the static data in data/salonData.ts and
+// data/galleryData.ts: products/cart, services, press, testimonials,
+// lookbook, locations and the appointment-booking payload.
+// ─────────────────────────────────────────────────────────────
 export interface Product {
   id: string;
   name: string;

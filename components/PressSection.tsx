@@ -1,5 +1,9 @@
 'use client';
-import React from 'react';
+// PressSection — Three-column press/magazine article cards with hover zoom
+// effects and a black date-badge overlay. Each card shows author, category,
+// title, and a "READ MORE" link. Clicking a card triggers onSelectArticle,
+// which opens the ArticleModal. Rendered in the #press section of the home
+// page to showcase media coverage.
 import { PRESS_ARTICLES } from '../data/salonData';
 import { PressArticle } from '../types';
 import { ArrowRight } from 'lucide-react';

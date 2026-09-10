@@ -1,4 +1,18 @@
 'use client';
+// ---------------------------------------------------------------------------
+// ProductModal — Product detail overlay with a two-column layout: bottle visual
+// on the left, tabbed info (Details / Actives / Ritual), price, quantity selector,
+// and "Add to Bag" button on the right. Briefly shows a confirmation state before
+// closing after a successful add-to-cart.
+//
+// Workflow role: E-commerce product detail — opened by Providers via
+// selectedProduct state (triggered from product cards via useSite().onOpenProduct).
+// Calls onAddToCart from Providers to mutate global cart state.
+//
+// Dependencies: types (Product), ProductBottleVisual (bottle rendering),
+// lucide-react icons, framer-motion (overlay animation).
+// Rendered by Providers.tsx.
+// ---------------------------------------------------------------------------
 import React, { useState } from 'react';
 import { Product } from '../types';
 import { ProductBottleVisual } from './ProductBottleVisual';

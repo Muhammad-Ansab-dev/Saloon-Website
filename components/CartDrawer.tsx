@@ -1,4 +1,17 @@
 'use client';
+// ---------------------------------------------------------------------------
+// CartDrawer — Slide-in shopping bag panel (right edge) that displays cart
+// items with quantity controls, subtotal, complimentary shipping, and a mock
+// checkout flow. Shows a confetti celebration on order confirmation.
+//
+// Workflow role: E-commerce cart UI — opened by Providers via isCartOpen state.
+// Receives cart items and mutation callbacks from Providers. The checkout button
+// simulates a 1.2 s processing delay, fires confetti, then auto-closes.
+//
+// Dependencies: types (CartItem), ProductBottleVisual (bottle thumbnails),
+// lucide-react icons, framer-motion (slide animation), canvas-confetti.
+// Rendered by Providers.tsx.
+// ---------------------------------------------------------------------------
 import React, { useState } from 'react';
 import { CartItem } from '../types';
 import { ProductBottleVisual } from './ProductBottleVisual';

@@ -1,4 +1,11 @@
 'use client';
+// InteractiveBooking — Booking section with three columns: (left) a large
+// calligraphic "Love is in the hair" script with scroll-triggered clipPath
+// reveal animation, (center) an interactive September 2026 calendar widget
+// with time-slot picker, and (right) studio working hours plus a "BOOK
+// APPOINTMENT" CTA. Selecting a date and clicking the CTA calls
+// onSelectDateAndBook to initiate the booking flow. Rendered in the
+// #booking section of the home page.
 import React, { useState, useRef, useEffect } from 'react';
 import { ChevronLeft, ChevronRight, Clock } from 'lucide-react';
 import { motion, useInView } from 'motion/react';

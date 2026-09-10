@@ -1,4 +1,10 @@
 'use client';
+// About — homepage "Our Story" section: parallax salon image on the left,
+// brand narrative + "As Seen In" press logos (Vogue, Elle, etc.) on the
+// right. Rendered by HomePage between PartnerBar and ServiceMenu.
+// Uses custom ScrollReveal / SpringReveal / Parallax wrappers for
+// scroll-triggered fade-in and spring entrance animations.
+
 import React from 'react';
 import { ScrollReveal, SpringReveal, Parallax } from './ScrollReveal';
 

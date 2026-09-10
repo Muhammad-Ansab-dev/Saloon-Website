@@ -1,4 +1,13 @@
 'use client';
+// AboutPage — full "/about" route composition. Contains: parallax hero
+// with scroll-tracked zoom, infinite stats marquee, brand story, founder
+// profile, four core values grid, full team gallery, scroll-driven
+// milestone timeline with progress line, and a CTA banner. Rendered by
+// the About route layout — entirely separate from the homepage.
+// Uses motion/react (useScroll, useTransform, useInView) for scroll-
+// scrubbed parallax and timeline animations, plus custom ScrollReveal /
+// SpringReveal / Parallax wrappers for section entrances.
+
 import React, { useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion, useScroll, useTransform, useInView } from 'motion/react';

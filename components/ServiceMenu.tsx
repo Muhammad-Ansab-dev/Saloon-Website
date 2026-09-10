@@ -1,4 +1,7 @@
 'use client';
+// ServiceMenu — Interactive price-list menu with category filter pills and a hover-synced image panel.
+// Appears on the homepage/experience section (not part of the /services route workflow).
+// Renders all services inline; clicking a row or image triggers the booking modal via onSelectService.
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { SERVICES, SERVICE_MEDIA } from '@/data/salonData';
 import { ServiceItem } from '@/types';

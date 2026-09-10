@@ -138,7 +138,12 @@
 }
 
 @media (max-width: 900px) {
-  .svc-detail {
+/* ─────────────────────────────────────────────
+   svcDetail.css — single-service detail page layout
+   (components/ServiceDetailPage.tsx): full-height hero,
+   image panel, meta + "book" actions.
+   ───────────────────────────────────────────── */
+.svc-detail {
     grid-template-columns: 1fr;
     padding: 120px 18px 80px;
     gap: 26px;

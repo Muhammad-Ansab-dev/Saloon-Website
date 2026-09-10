@@ -1,4 +1,15 @@
 'use client';
+// ---------------------------------------------------------------------------
+// FloatingWidget — Persistent floating action button pinned to the right edge
+// of the viewport. Displays a pulsing calendar icon that opens the booking modal.
+//
+// Workflow role: Global chrome — rendered by Providers on every page. Provides
+// an always-visible shortcut to trigger BookingModal, complementing the Header's
+// "Book Now" button for quick appointment access while scrolling.
+//
+// Dependencies: lucide-react (Calendar), framer-motion (pulse animation).
+// Consumed only by Providers.tsx.
+// ---------------------------------------------------------------------------
 import React from 'react';
 import { Calendar } from 'lucide-react';
 import { motion } from 'motion/react';

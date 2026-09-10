@@ -1,4 +1,11 @@
 'use client';
+// TeamSection — "The Artisans" horizontal-scroll card strip on the homepage.
+// Displays each stylist from salonData in a snap-scroll row with parallax
+// images and staggered spring entrances. Rendered by HomePage between
+// LookbookTrio and TestimonialGrid.
+// Uses custom ScrollReveal / SpringReveal / Parallax for scroll-triggered
+// entrances; motion/react is imported but the main animation is CSS snap.
+
 import React from 'react';
 import { motion } from 'motion/react';
 import { STYLISTS } from '@/data/salonData';

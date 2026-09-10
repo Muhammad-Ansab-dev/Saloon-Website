@@ -1,3 +1,9 @@
+// ─────────────────────────────────────────────────────────────
+// Root layout — wraps every page with global styles, Google Fonts
+// (Caveat, Montserrat, Playfair Display, Syne) and the site-wide
+// Providers shell (Header, Footer, FloatingWidget, Cart, Booking,
+// Product modals) so overlays mount once on first paint.
+// ─────────────────────────────────────────────────────────────
 import type { Metadata } from 'next';
 import './globals.css';
 import { Providers } from '../components/Providers';

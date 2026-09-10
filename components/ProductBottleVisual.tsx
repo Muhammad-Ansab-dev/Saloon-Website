@@ -1,5 +1,9 @@
 'use client';
-import React from 'react';
+// ProductBottleVisual — Pure SVG illustration of the salon's 4 haircare product
+// bottles (SOS Conditioner, Light Shampoo, Silk Serum, Leave-In Cream). Each
+// variant renders a hand-crafted bottle shape with labels, specular highlights,
+// and a drop shadow. Scales up on hover via the isHovered prop. Used inside
+// BestSellers to display product visuals without raster images.
 
 interface ProductBottleVisualProps {
   type: 'sos-conditioner' | 'light-shampoo' | 'silk-serum' | 'leave-in-cream';

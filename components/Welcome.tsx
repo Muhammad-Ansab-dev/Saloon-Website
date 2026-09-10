@@ -1,4 +1,10 @@
 'use client';
+// ─────────────────────────────────────────────────────────────
+// Welcome — small pink statement band with a brand intro and an
+// "EXPLORE SERVICES" CTA that scrolls to the #services section.
+// Legacy component: NOT currently rendered on any page. Keep for
+// reference only.
+// ─────────────────────────────────────────────────────────────
 import React from 'react';
 import { motion } from 'motion/react';
 

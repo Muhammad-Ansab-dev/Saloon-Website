@@ -1,5 +1,10 @@
 'use client';
-import React, { useEffect, useRef, useState } from 'react';
+// ServicesShop — Filterable card-grid service menu with category chip filters
+// (All, Cut, Colour, Treatment…). Each card shows the service image, name,
+// duration, and price, linking to a detail page (/services/[id]). GSAP animates
+// card visibility on filter changes. Rendered on the /services page as the main
+// browsable service catalog.
+import React, { useRef, useState, useEffect } from 'react';
 import Link from 'next/link';
 import { gsap } from 'gsap';
 import { SERVICES, SERVICE_MEDIA } from '@/data/salonData';

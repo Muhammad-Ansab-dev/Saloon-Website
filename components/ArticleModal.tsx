@@ -1,5 +1,9 @@
 'use client';
-import React from 'react';
+// ArticleModal — Full-screen overlay modal that displays a press article's
+// details: header image, author, category, date, read time, excerpt, and body
+// content. Framer Motion handles enter/exit scale+fade transitions. A blurred
+// backdrop closes the modal on click. Opened from PressSection when a user
+// clicks "READ MORE" on any magazine card.
 import { PressArticle } from '../types';
 import { X, Calendar, Clock, Share2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';

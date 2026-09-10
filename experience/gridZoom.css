@@ -1,3 +1,8 @@
+/* ─────────────────────────────────────────────
+   gridZoom.css — "Grid Zoom" editorial effect port,
+   scoped with gz- prefix (components/GridZoomServices.
+   tsx). Legacy showcase; not routed currently.
+   ───────────────────────────────────────────── */
 /* Grid Zoom Effect — faithful Codrops port, scoped with gz- prefix */
 
 .gz-grid {

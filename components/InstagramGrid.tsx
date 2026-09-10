@@ -1,4 +1,10 @@
 'use client';
+// InstagramGrid — Bento-style editorial layout displaying 5 Instagram posts
+// from the salon. Left column is a large grayscale portrait; right column is a
+// 2×2 grid of smaller images. Hover reveals a dark overlay with caption text,
+// the @paulhairstudio handle, and a toggleable heart/like button. Rendered
+// on the home page between the press and contact sections to showcase social
+// content.
 import React, { useState } from 'react';
 import { INSTAGRAM_POSTS } from '../data/salonData';
 import { Heart, Instagram, Maximize2 } from 'lucide-react';

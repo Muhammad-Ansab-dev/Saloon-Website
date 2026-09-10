@@ -1,4 +1,18 @@
 'use client';
+// ---------------------------------------------------------------------------
+// BookingModal — Appointment reservation form in a centered overlay modal.
+// Two-step flow: (1) form with service, stylist, date/time, and guest info,
+// (2) confirmation summary with confetti. Supports pre-selection of a service
+// so callers (e.g. "Book Now" from a specific service card) can jump ahead.
+//
+// Workflow role: Booking workflow — opened by Providers via isBookingOpen state.
+// Receives optional preSelectedService/Date/Time from Providers (set by
+// onSelectServiceForBooking or header triggers). Fires confetti on success.
+//
+// Dependencies: salonData (SERVICES, STYLISTS), types (ServiceItem), lucide-react
+// icons, framer-motion (overlay animation), canvas-confetti.
+// Rendered by Providers.tsx.
+// ---------------------------------------------------------------------------
 import React, { useEffect, useState } from 'react';
 import { SERVICES, STYLISTS } from '../data/salonData';
 import { ServiceItem } from '../types';

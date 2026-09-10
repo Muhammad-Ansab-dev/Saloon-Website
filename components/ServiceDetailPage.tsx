@@ -1,5 +1,8 @@
 'use client';
-
+// ServiceDetailPage — Full detail view for a single service: hero image, description, price, duration.
+// Services workflow step 3: individual service page (e.g. /services/womens-cut-classic).
+// Rendered by: app/services/[id]/page.tsx when the URL param matches a known service ID.
+// Offers a "Book This Service" button that triggers the booking modal via the parent callback.
 import React from 'react';
 import Link from 'next/link';
 import { motion } from 'motion/react';

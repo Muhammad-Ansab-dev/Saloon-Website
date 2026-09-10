@@ -1,5 +1,12 @@
 'use client';
-import React, { useEffect, useRef } from 'react';
+// GridZoomServices — Codrops-style grid-zoom interaction for browsing salon
+// services. A 3×4 image grid zooms the clicked cell to the right side of the
+// viewport while fading siblings, revealing service details (name, duration,
+// price, category) with animated text transitions. A mini-grid navigation lets
+// users cycle between services. Escape or the back arrow returns to the grid.
+// Rendered on the /services page; calls onSelectService to pass the chosen
+// service back to the parent for booking.
+import React, { useRef, useEffect } from 'react';
 import { gsap } from 'gsap';
 import SplitType from 'split-type';
 import { SERVICES } from '@/data/salonData';

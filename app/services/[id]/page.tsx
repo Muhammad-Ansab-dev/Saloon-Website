@@ -1,5 +1,9 @@
 'use client';
-
+// Route: /services/[id] — Dynamic catch-all for categories and individual services (App Router).
+// Resolves the URL param against known category slugs first, then service IDs.
+// If it's a category → renders ServicesByCategory (step 2).
+// If it's a service ID → renders ServiceDetailPage (step 3).
+// Otherwise → shows a 404-style "Page not found" fallback.
 import { use } from 'react';
 import { useSite } from '@/components/Providers';
 import { ServiceDetailPage } from '@/components/ServiceDetailPage';

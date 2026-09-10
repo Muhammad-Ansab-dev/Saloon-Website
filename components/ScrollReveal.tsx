@@ -1,5 +1,19 @@
 'use client';
 
+// ─────────────────────────────────────────────────────────────
+// ScrollReveal.tsx — shared animation primitives built on
+// motion/react (framer-motion), used across nearly every section:
+//
+//   • ScrollReveal  — scrub-driven reveal tied to scroll progress
+//     (opacity/x/y/scaleY/rotate travel as the element scrolls).
+//   • SpringReveal  — one-shot `whileInView` bounce-in with a
+//     spring curve, fired once per entry.
+//   • Parallax      — scroll-speed depth: child drifts vertically
+//     (and optionally horizontally) as it crosses the viewport.
+//
+// Directions map to transform origins so reveals feel directional.
+// Rendered by: HomePage sections, AboutPage, ServicesCat, etc.
+// ─────────────────────────────────────────────────────────────
 import React, { useRef } from 'react';
 import { motion, useScroll, useTransform } from 'motion/react';
 

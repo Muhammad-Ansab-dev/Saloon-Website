@@ -1,4 +1,18 @@
 'use client';
+// ---------------------------------------------------------------------------
+// Providers — Top-level client wrapper that owns all shared site state: cart,
+// booking modal, product modal, and section navigation. Creates the SiteContext
+// so any child component can open modals or add to cart without prop drilling.
+//
+// Workflow role: The orchestrator. Renders Header, Footer, FloatingWidget,
+// CartDrawer, BookingModal, and ProductModal as global chrome around {children}.
+// Exposes useSite() hook with: onBookNow, onSelectServiceForBooking, onOpenCart,
+// onOpenProduct, and onAddToCart.
+//
+// Dependencies: salonData (PRODUCTS), types (Product, CartItem, ServiceItem),
+// and every global component it renders (Header, Footer, FloatingWidget,
+// CartDrawer, BookingModal, ProductModal).
+// ---------------------------------------------------------------------------
 
 import React, { createContext, useContext, useState } from 'react';
 import { useRouter, usePathname } from 'next/navigation';

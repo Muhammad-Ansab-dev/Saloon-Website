@@ -1,3 +1,8 @@
+/* ─────────────────────────────────────────────
+   serviceMenu.css — scrollable services price list
+   on the homepage (components/ServiceMenu.tsx) and
+   the hovering rows/hover-bold + arrow interactions.
+   ───────────────────────────────────────────── */
 .svcm-list {
   position: relative;
   max-height: 340px;

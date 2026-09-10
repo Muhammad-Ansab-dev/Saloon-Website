@@ -1,4 +1,7 @@
 'use client';
+// ServicesByCategory — Lists all services within a single category with image cards and "Book now" CTAs.
+// Services workflow step 2: category page (e.g. /services/cut-style) reached from ServicesCategories.
+// Rendered by: app/services/[id]/page.tsx when the URL param matches a known category slug.
 import React from 'react';
 import Link from 'next/link';
 import { ArrowRight, ChevronLeft } from 'lucide-react';

@@ -1,3 +1,9 @@
+/* ─────────────────────────────────────────────
+   heroSlider.css — styles for the VfxHero homepage
+   hero: full-screen crossfade slides, floating arrow
+   cursor (.vfx-arrow) with half-based direction, and
+   overlays. Imported by components/VfxHero.tsx.
+   ───────────────────────────────────────────── */
 @import url("https://fonts.cdnfonts.com/css/pp-neue-montreal");
 
 @font-face {

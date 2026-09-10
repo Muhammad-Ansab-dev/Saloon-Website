@@ -1,4 +1,11 @@
 'use client';
+// NewsletterSubscribe — email signup banner at the very bottom of the
+// homepage (above footer). Shows a headline + email input form; on submit
+// fires a canvas-confetti burst and swaps to a "Thank You" confirmation.
+// Rendered by HomePage as the final content section.
+// Uses motion/react for the success-state spring transition and
+// canvas-confetti for the celebration effect.
+
 import React, { useState } from 'react';
 import { Check } from 'lucide-react';
 import { motion } from 'motion/react';

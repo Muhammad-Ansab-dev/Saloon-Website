@@ -1,3 +1,10 @@
+// ─────────────────────────────────────────────────────────────
+// galleryData.ts — static content for the /gallery page.
+// GALLERY_CATEGORIES drives the filter pills
+// (ALL + 4 disciplines); GALLERY_ITEMS is the image pool with a
+// caption and a category tag used by GalleryGrid for filtering.
+// Consumed by: views/GalleryPage.tsx.
+// ─────────────────────────────────────────────────────────────
 export interface GalleryItem {
   image: string;
   alt: string;

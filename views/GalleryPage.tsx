@@ -1,4 +1,8 @@
 'use client';
+// GalleryPage — Full-page gallery browser for the salon's portfolio work.
+// Renders category filter pills (ALL, CUTS, COLOUR, etc.) and a masonry-style
+// image grid via GalleryGrid. Filters GALLERY_ITEMS by the active category with
+// an AnimatePresence crossfade transition. Rendered by the /gallery route.
 import React, { useState } from 'react';
 import { GalleryGrid } from '../components/GalleryGrid';
 import { GALLERY_ITEMS, GALLERY_CATEGORIES } from '@/data/galleryData';

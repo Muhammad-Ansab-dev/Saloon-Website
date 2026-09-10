@@ -1,3 +1,12 @@
+// ─────────────────────────────────────────────────────────────
+// salonData.ts — THE single source of truth for all static site
+// content: brand name fonts (PARTNERS), the haircare product shop
+// (PRODUCTS), press articles (PRESS_ARTICLES), testimonials
+// (TESTIMONIALS), the services menu with prices/durations/
+// categories (SERVICES) plus their media (SERVICE_MEDIA), the
+// booking stylists list (STYLISTS) and studio locations
+// (LOCATIONS). Consumed by virtually every component/page.
+// ─────────────────────────────────────────────────────────────
 import { Product, ServiceItem, PressArticle, Testimonial, LookbookItem, LocationBranch } from '../types';
 
 export const PARTNERS = [

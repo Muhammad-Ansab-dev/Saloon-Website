@@ -1,4 +1,11 @@
 'use client';
+// ─────────────────────────────────────────────────────────────
+// TestimonialQuote — centered single-quote carousel with quote
+// mark, prev/next chevrons and dot indicators.
+// Legacy component: NOT currently rendered (superseded by
+// TestimonialGrid's 3D coverflow used on the homepage). Keep for
+// reference only. Reads TESTIMONIALS from data/salonData.ts.
+// ─────────────────────────────────────────────────────────────
 import React, { useState } from 'react';
 import { TESTIMONIALS } from '@/data/salonData';
 import { ChevronLeft, ChevronRight, Quote } from 'lucide-react';

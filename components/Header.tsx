@@ -1,4 +1,16 @@
 'use client';
+// ---------------------------------------------------------------------------
+// Header — Fixed top navigation bar with responsive desktop nav, mobile drawer,
+// and "Book Now" CTA. Toggles between transparent (over hero) and solid (scrolled)
+// styles via scroll detection. Delegates navigation to page sections or routes.
+//
+// Workflow role: Global chrome — rendered by Providers on every page. Triggers
+// BookingModal via onOpenBooking, scrolls to sections via onNavigate, and drives
+// the mobile hamburger drawer for smaller viewports.
+//
+// Dependencies: next/navigation (router, usePathname), lucide-react icons,
+// framer-motion (mobile drawer animation). Consumed only by Providers.tsx.
+// ---------------------------------------------------------------------------
 import React, { useState, useEffect } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { Calendar, X, ArrowUpRight } from 'lucide-react';

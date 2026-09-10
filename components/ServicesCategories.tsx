@@ -1,4 +1,8 @@
 'use client';
+// ServicesCategories — Landing grid of all service categories (e.g. "Cut & Style", "Color & Cut").
+// Services workflow step 1: displays a card per category linking to /services/[category-slug].
+// Rendered by: ServicesPage → app/services/page.tsx (the /services route).
+// Also exports categorySlug() and ALL_CATEGORIES helpers used by the dynamic [id] route.
 import React from 'react';
 import Link from 'next/link';
 import { ArrowRight } from 'lucide-react';

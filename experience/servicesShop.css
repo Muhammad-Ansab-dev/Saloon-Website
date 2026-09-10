@@ -202,7 +202,12 @@
 }
 
 @media (max-width: 900px) {
-  .svx-root {
+/* ─────────────────────────────────────────────
+   servicesShop.css — product shop grid layout
+   (components/ServicesShop.tsx, svx- prefix).
+   Legacy showcase; not routed currently.
+   ───────────────────────────────────────────── */
+.svx-root {
     padding: 120px 18px 80px;
   }
 }

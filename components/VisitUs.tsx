@@ -1,4 +1,11 @@
 'use client';
+// VisitUs — "Visit Us" section listing Zurich and Paris salon locations
+// with addresses, contact info, and Google Maps links. A decorative
+// parallax salon image sits on the right. Rendered by HomePage between
+// TestimonialGrid and NewsletterSubscribe.
+// Uses custom ScrollReveal / SpringReveal / Parallax for scroll-triggered
+// fade-in and spring entrance animations.
+
 import React from 'react';
 import { LOCATIONS } from '@/data/salonData';
 import { ExternalLink } from 'lucide-react';

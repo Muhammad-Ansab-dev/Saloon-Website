@@ -1,5 +1,8 @@
 'use client';
-import React from 'react';
+// GalleryGrid — Responsive 2/3-column image grid that displays gallery items
+// with staggered scroll-reveal animations (motion/react). Each cell shows a
+// lazy-loaded image with a gradient caption overlay on hover. Used exclusively
+// inside GalleryPage to render the filtered salon portfolio.
 import { motion } from 'motion/react';
 import { GalleryItem } from '@/data/galleryData';
 

@@ -1,4 +1,15 @@
 'use client';
+// ---------------------------------------------------------------------------
+// Footer — Site-wide footer with brand badge, 3-column layout (contact info,
+// slogan + social icons, business hours), payment badges, copyright, and a
+// back-to-top button. Purely presentational; receives a single callback.
+//
+// Workflow role: Global chrome — rendered by Providers on every page. Provides
+// the scroll-to-top action (onScrollToTop) for the Footer's up-arrow button.
+//
+// Dependencies: lucide-react icons (Instagram, Linkedin, Facebook, ArrowUp,
+// CreditCard). Consumed only by Providers.tsx.
+// ---------------------------------------------------------------------------
 import React from 'react';
 import { Instagram, Linkedin, Facebook, ArrowUp, CreditCard } from 'lucide-react';
 

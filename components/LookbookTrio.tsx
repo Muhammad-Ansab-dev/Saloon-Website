@@ -1,4 +1,11 @@
 'use client';
+// LookbookTrio — "Our Lookbook" section showing three YouTube Shorts in a
+// 9:16 vertical grid. Each card uses SpringReveal with a different direction
+// (left/up/right). Clicking a card opens a lightbox modal with an autoplay
+// player and a link to YouTube. Rendered by HomePage after ServiceMenu.
+// Uses motion/react (AnimatePresence) for the lightbox open/close and
+// custom ScrollReveal / SpringReveal for scroll-triggered card entrances.
+
 import React, { useState } from 'react';
 import { X, Sparkles, Play } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';

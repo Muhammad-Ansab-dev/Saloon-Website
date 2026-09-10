@@ -1,5 +1,11 @@
 'use client';
-import React, { useEffect, useRef } from 'react';
+// GalleryExperience — Immersive horizontal-scroll gallery powered by GSAP Flip,
+// SplitText, and Lenis smooth scrolling. Displays 8 hero hairstyle images in a
+// horizontally-scrollable strip; clicking an image zooms into a full detail view
+// with animated text reveals (title, description labels). Clicking again closes
+// the detail and returns to the horizontal grid. Rendered on the home page as a
+// showpiece browsing experience.
+import React, { useRef, useEffect } from 'react';
 import imagesLoaded from 'imagesloaded';
 import { gsap } from 'gsap';
 import { Flip } from 'gsap/Flip';

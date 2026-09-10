@@ -1,3 +1,10 @@
+/* ─────────────────────────────────────────────
+   Globals — Tailwind v4 import, brand color tokens
+   (blush family), base typography + selection colors,
+   editorial/serif font utilities, custom scrollbar,
+   marquee keyframes (used by About stats + testimonials)
+   and watermark script text.
+   ───────────────────────────────────────────── */
 @import "tailwindcss";
 
 @layer base {

@@ -1,4 +1,10 @@
 'use client';
+// VfxHero — full-viewport image slider shown at the very top of the homepage.
+// Auto-advances through 6 editorial slides with a progress bar, keyboard
+// navigation (arrows/space), and a directional arrow cursor that follows
+// the pointer. Click left/right halves to navigate. Rendered by HomePage.
+// Uses motion/react (AnimatePresence) for the cursor arrow transition.
+
 import React, { useEffect, useRef, useState } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';

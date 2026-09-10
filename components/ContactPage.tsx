@@ -1,4 +1,9 @@
 'use client';
+// ContactPage — Full-page contact view with studio location cards (address,
+// email, phone, hours, Google Maps link) on the left and a message form (name,
+// email, subject, textarea) on the right. Uses ScrollReveal/SpringReveal for
+// staggered entrance animations. Form submission shows a confirmation screen.
+// Rendered by the /contact route.
 import React, { useState } from 'react';
 import { LOCATIONS } from '@/data/salonData';
 import { ExternalLink, Mail, MapPin, Phone, Clock, Check } from 'lucide-react';

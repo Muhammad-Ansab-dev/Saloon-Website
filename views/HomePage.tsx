@@ -1,4 +1,10 @@
 'use client';
+// HomePage — top-level composition for the "/" route (homepage).
+// Renders all hero-to-footer sections in order: VfxHero, PartnerBar, About,
+// ServiceMenu, LookbookTrio, TeamSection, TestimonialGrid, VisitUs, and
+// NewsletterSubscribe. Passes booking callbacks from the parent layout down
+// to ServiceMenu. No animation libraries — orchestration only.
+
 import React from 'react';
 import { VfxHero } from '../components/VfxHero';
 import { PartnerBar } from '../components/PartnerBar';
