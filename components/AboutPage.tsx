@@ -14,6 +14,7 @@ const TEAM_IMAGES = [
   '/images/instagram-2.jpg',
   '/images/hair-service1.avif',
   '/images/press-1.jpg',
+  '/images/lookbook-1.jpg',
 ];
 
 const VALUES = [
@@ -187,26 +188,28 @@ export const AboutPage: React.FC = () => {
       </div>
 
       {/* ── STATS BAR ── */}
-      <div className="bg-black py-10 sm:py-12">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid grid-cols-2 lg:grid-cols-4 gap-8">
-          {STATS.map((stat, idx) => (
-            <SpringReveal
-              key={stat.label}
-              direction={idx % 2 === 0 ? 'up' : 'down'}
-              distance={40}
-              delay={idx * 0.08}
-              easing="spring"
-              className="text-center"
-            >
-              <p className="font-editorial text-3xl sm:text-4xl font-black text-white tracking-tight">
-                {stat.value}
-              </p>
-              <p className="mt-1 text-[10px] font-bold tracking-[0.25em] text-white/50 uppercase">
-                {stat.label}
-              </p>
-            </SpringReveal>
+      <div className="bg-black py-10 sm:py-12 overflow-hidden">
+        <motion.div
+          className="flex whitespace-nowrap"
+          animate={{ x: ['0%', '-50%'] }}
+          transition={{ duration: 24, ease: 'linear', repeat: Infinity }}
+        >
+          {[...STATS, ...STATS].map((stat, idx) => (
+            <div key={idx} className="flex items-center gap-12 sm:gap-20 px-12 sm:px-20">
+              <div className="text-center whitespace-nowrap">
+                <p className="font-editorial text-3xl sm:text-4xl font-black text-white tracking-tight">
+                  {stat.value}
+                </p>
+                <p className="mt-1 text-[10px] font-bold tracking-[0.25em] text-white/50 uppercase">
+                  {stat.label}
+                </p>
+              </div>
+              <span className="text-white/15 text-3xl font-thin" aria-hidden="true">
+                ·
+              </span>
+            </div>
           ))}
-        </div>
+        </motion.div>
       </div>
 
       {/* ── STORY ── */}
@@ -375,34 +378,34 @@ export const AboutPage: React.FC = () => {
             </ScrollReveal>
           </div>
 
-          <div className="overflow-x-auto snap-x snap-mandatory -mx-4 px-4 pb-4 scroll-smooth">
-            <div className="flex gap-4 sm:gap-6">
-              {STYLISTS.map((stylist, idx) => (
-                <SpringReveal
-                  key={stylist.id}
-                  direction={idx % 2 === 0 ? 'left' : 'right'}
-                  distance={45}
-                  delay={idx * 0.06}
-                  easing="spring"
-                  className="group shrink-0 snap-start w-[85%] sm:w-[45%] lg:w-[23.5%]"
-                >
-                  <div className="relative aspect-[3/4] bg-neutral-200 overflow-hidden mb-4">
-                    <Parallax amount={16}>
-                      <img
-                        src={TEAM_IMAGES[idx]}
-                        alt={stylist.name}
-                        className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-700"
-                      />
-                    </Parallax>
-                    <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors duration-300" />
-                  </div>
-                  <h3 className="font-editorial text-[10px] sm:text-xs font-bold uppercase tracking-wider text-black mb-1">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 sm:gap-8 lg:gap-10">
+            {STYLISTS.map((stylist, idx) => (
+              <SpringReveal
+                key={stylist.id}
+                direction={idx % 2 === 0 ? 'left' : 'right'}
+                distance={40}
+                delay={idx * 0.06}
+                easing="spring"
+                className="group"
+              >
+                <div className="relative h-[80vh] sm:h-[85vh] bg-neutral-200 overflow-hidden mb-4">
+                  <Parallax amount={16}>
+                    <img
+                      src={TEAM_IMAGES[idx]}
+                      alt={stylist.name}
+                      className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-700"
+                    />
+                  </Parallax>
+                  <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors duration-300" />
+                </div>
+                <div className="flex items-end justify-between gap-4 border-b border-neutral-200 pb-3">
+                  <h3 className="font-editorial text-base sm:text-xl font-bold uppercase tracking-wider text-black mb-0">
                     {stylist.name}
                   </h3>
-                  <p className="text-[9px] sm:text-[10px] text-neutral-500 leading-tight">{stylist.role}</p>
-                </SpringReveal>
-              ))}
-            </div>
+                  <p className="text-[10px] sm:text-xs text-neutral-500 text-right">{stylist.role}</p>
+                </div>
+              </SpringReveal>
+            ))}
           </div>
         </div>
       </section>

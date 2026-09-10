@@ -5,6 +5,7 @@ import { PartnerBar } from '../components/PartnerBar';
 import { About } from '../components/About';
 import { ServiceMenu } from '../components/ServiceMenu';
 import { LookbookTrio } from '../components/LookbookTrio';
+import { TeamSection } from '../components/TeamSection';
 import { TestimonialGrid } from '../components/TestimonialGrid';
 import { VisitUs } from '../components/VisitUs';
 import { NewsletterSubscribe } from '../components/NewsletterSubscribe';
@@ -26,6 +27,7 @@ export const HomePage: React.FC<HomePageProps> = ({
       <About />
       <ServiceMenu onSelectService={onSelectServiceForBooking} />
       <LookbookTrio />
+      <TeamSection />
       <TestimonialGrid />
       <VisitUs />
       <NewsletterSubscribe />

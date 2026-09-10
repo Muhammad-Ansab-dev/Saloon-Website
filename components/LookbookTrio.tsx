@@ -34,12 +34,12 @@ export const LookbookTrio: React.FC = () => {
         <div className="text-center max-w-2xl mx-auto mb-14 sm:mb-20">
           <ScrollReveal direction="down" distance={20}>
             <span className="text-[10px] font-bold tracking-[0.25em] uppercase text-neutral-400 mb-4 block">
-              Our Professionals
+              Our Lookbook
             </span>
           </ScrollReveal>
           <ScrollReveal scaleY={0.1} distance={0} origin="50% 100%">
             <h2 className="font-editorial text-3xl sm:text-4xl md:text-5xl font-black uppercase text-black tracking-tight leading-[1.05]">
-              MEET THE EXPERTS
+              EXPLORE THE GALLERY
             </h2>
           </ScrollReveal>
         </div>

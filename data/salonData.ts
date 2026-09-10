@@ -293,7 +293,7 @@ export const SERVICES: ServiceItem[] = [
     description: 'Runs the show ready: sculptural updo styled for events, shoots and red carpets.',
     price: 65,
     durationMinutes: 50,
-    category: 'Style & Finish'
+    category: 'Bridal & Occasion'
   },
   {
     id: 'srv-10',
@@ -417,5 +417,6 @@ export const STYLISTS = [
   { id: 'sophie', name: 'Sophie Weber', role: 'Editorial Stylist & Scalp Specialist' },
   { id: 'lena', name: 'Lena Fischer', role: 'Junior Stylist & Colourist' },
   { id: 'marc', name: 'Marc Dubois', role: 'Apprentice Barber' },
-  { id: 'amelie', name: 'Amélie Rousseau', role: 'Trainee & Scalp Therapist' }
+  { id: 'amelie', name: 'Amélie Rousseau', role: 'Trainee & Scalp Therapist' },
+  { id: 'nina', name: 'Nina Vogel', role: 'Colourist & Bridal Specialist' }
 ];

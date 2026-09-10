@@ -119,16 +119,16 @@ export const TestimonialGrid: React.FC = () => {
         <button
           onClick={prev}
           aria-label="Previous testimonial"
-          className="absolute left-2 sm:left-6 lg:-left-4 top-1/2 -translate-y-1/2 z-40 w-11 h-11 rounded-full border border-neutral-300 bg-white/80 backdrop-blur-sm text-black hover:bg-black hover:text-white hover:border-black flex items-center justify-center transition-colors cursor-pointer"
+          className="absolute left-2 sm:left-6 lg:-left-6 top-1/2 -translate-y-1/2 z-40 w-16 h-16 rounded-full border border-black bg-white/10 backdrop-blur-[10px] text-neutral-900 hover:bg-black hover:text-white hover:border-black flex items-center justify-center transition-colors cursor-pointer"
         >
-          <ChevronLeft className="w-5 h-5" />
+          <ChevronLeft className="w-8 h-8" />
         </button>
         <button
           onClick={next}
           aria-label="Next testimonial"
-          className="absolute right-2 sm:right-6 lg:-right-4 top-1/2 -translate-y-1/2 z-40 w-11 h-11 rounded-full border border-neutral-300 bg-white/80 backdrop-blur-sm text-black hover:bg-black hover:text-white hover:border-black flex items-center justify-center transition-colors cursor-pointer"
+          className="absolute right-2 sm:right-6 lg:-right-6 top-1/2 -translate-y-1/2 z-40 w-16 h-16 rounded-full border border-black bg-white/10 backdrop-blur-[10px] text-neutral-900 hover:bg-black hover:text-white hover:border-black flex items-center justify-center transition-colors cursor-pointer"
         >
-          <ChevronRight className="w-5 h-5" />
+          <ChevronRight className="w-8 h-8" />
         </button>
       </div>
     </section>

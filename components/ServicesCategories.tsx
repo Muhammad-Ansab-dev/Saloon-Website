@@ -11,6 +11,7 @@ const CATEGORY_MEDIA: Record<string, string> = {
   'Wash & Refresh': '/images/press-1.jpg',
   'Color & Cut': '/images/instagram-4.jpg',
   'Cut & Texture': '/images/lookbook-3.jpg',
+  'Bridal & Occasion': '/images/lookbook-1.jpg',
 };
 
 export const categorySlug = (category: string) =>
