@@ -9,7 +9,7 @@ import { motion } from 'motion/react';
 import { useSiteContent } from '@/hooks/useSiteContent';
 import { SERVICE_MEDIA } from '@/data/salonData';
 import { ServiceItem } from '@/types';
-import '../../../experience/svcDetail.css';
+import '../../experience/svcDetail.css';
 
 interface ServiceDetailPageProps {
   serviceId: string;

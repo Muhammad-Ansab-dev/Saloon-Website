@@ -10,7 +10,7 @@ import Link from 'next/link';
 import { motion, AnimatePresence } from 'motion/react';
 import { ScrollReveal, SpringReveal, Parallax } from '../../components/ui/ScrollReveal';
 import { useSiteContent } from '@/hooks/useSiteContent';
-import '../../../experience/serviceMenu.css';
+import '../../experience/serviceMenu.css';
 
 interface ServiceMenuProps {
   onSelectService: (service: ServiceItem) => void;

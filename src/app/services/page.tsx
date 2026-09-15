@@ -4,7 +4,7 @@
 // Renders ServicesPage → ServicesCategories, showing the grid of all service categories.
 // This is step 1 of the services workflow: landing → category → detail → booking.
 import { getCollection } from '@/lib/store';
-import { ServicesPage } from '@/pages/ServicesPage';
+import { ServicesPage } from '@/views/ServicesPage';
 
 export default async function Page() {
   const services = await getCollection('services');

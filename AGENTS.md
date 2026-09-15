@@ -19,7 +19,8 @@ Next.js 15 (App Router) + React 19 + TypeScript + Tailwind Cache v4 + motion (fr
 - **Shell:** `src/app/layout.tsx` mounts `<Providers>` once → Header, Footer, FloatingWidget, CartDrawer, BookingModal, ProductModal are rendered there for every route.
 - **Folder layout:** `src/components/` is organised by responsibility:
   - `layout/` — chrome that ships on every route (Providers, Header, Footer, FloatingWidget)
-  - `pages/` — route-level compositions (HomePage, ServicesPage, GalleryPage)
+  - `views/` — route-level compositions (HomePage, ServicesPage, GalleryPage) —
+    NOTE: named `views/`, not `pages/`, because `src/pages` is reserved by Next.js for the legacy Pages Router
   - `sections/<page>/` — sections grouped by the page they belong to (`home/`, `services/`, `about/`, `contact/`)
   - `booking/` — the shared booking flow (BookingModal, BookingForm, DatePickerField)
   - `cart/` — CartDrawer, ProductModal, ProductBottleVisual
@@ -33,7 +34,7 @@ Next.js 15 (App Router) + React 19 + TypeScript + Tailwind Cache v4 + motion (fr
 ## Routing specifics
 
 ### Services workflow (3 steps)
-1. `/services` → `src/pages/ServicesPage.tsx` → `src/sections/services/ServicesCategories.tsx` (category cards grid).
+1. `/services` → `src/views/ServicesPage.tsx` → `src/sections/services/ServicesCategories.tsx` (category cards grid).
 2. `/services/<slug>` → `src/app/services/[id]/page.tsx` resolves param:
    - if it matches a category **slug** → `ServicesByCategory` (all services in that category)
    - else if it matches a service **id** (`srv-N`) → `ServiceDetailPage`
@@ -42,7 +43,7 @@ Next.js 15 (App Router) + React 19 + TypeScript + Tailwind Cache v4 + motion (fr
 3. Booking: any "Book now" button calls `onSelectServiceForBooking(service)` → opens `BookingModal` with that service pre-selected. The `/contact` page renders the same form inline as a card.
 
 ### Homepage section order
-`src/pages/HomePage.tsx`: Hero → PartnerBar → About → ServiceMenu → LookbookTrio → TeamSection → TestimonialGrid → VisitUs → NewsletterSubscribe.
+`src/views/HomePage.tsx`: Hero → PartnerBar → About → ServiceMenu → LookbookTrio → TeamSection → TestimonialGrid → VisitUs → NewsletterSubscribe.
 
 ## Styling conventions
 - Headings: `font-editorial` (Syne, `font-black uppercase tracking-tight`).

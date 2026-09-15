@@ -5,7 +5,7 @@
 // Rendered by HomePage.
 
 import React, { useEffect, useState } from 'react';
-import '../../../experience/heroSlider.css';
+import '../../experience/heroSlider.css';
 
 const BOXES = [
   {

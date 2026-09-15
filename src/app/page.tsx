@@ -5,7 +5,7 @@
 // components/pages/HomePage.tsx.
 // ─────────────────────────────────────────────────────────────
 import { useSite } from '@/components/layout/Providers';
-import { HomePage } from '@/pages/HomePage';
+import { HomePage } from '@/views/HomePage';
 
 export default function Page() {
   const { onBookNow, onSelectServiceForBooking } = useSite();

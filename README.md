@@ -1,3 +1,4 @@
+NOTE: view compositions live in `src/views/` — never rename this to `pages` (`src/pages` is reserved by the legacy Pages Router and breaks the build).
 # Paul Hair Studio — Next.js Site
 
 Editorial luxury hair salon & haircare studio website: interactive home page, full services menu (category landing → category pages → service detail), gallery with filterable image grid, 3D coverflow testimonials, about page with stats marquee + team, appointments booking flow, and a luxury product cart.
@@ -27,7 +28,7 @@ pnpm lint         # type-check only (tsc --noEmit)
 ```
 src/                    source root (standard Next.js src/ layout)
   app/                  App Router routes (thin — wrap a page composition)
-    page.tsx            /            — homepage (src/pages/HomePage.tsx)
+    page.tsx            /            — homepage (src/views/HomePage.tsx)
     about/page.tsx      /about       — about page (src/sections/about/AboutPage.tsx)
     services/page.tsx   /services    — category landing grid
     services/[id]/page.tsx /services/<slug-or-id> — resolves category page OR service detail
@@ -37,7 +38,7 @@ src/                    source root (standard Next.js src/ layout)
     globals.css         — Tailwind v4, brand tokens, marquee, utilities
     api/                — route handlers (/api/content, /api/booking, /api/admin/*, …)
     admin/              — admin dashboard (login + content management)
-  pages/                route-level compositions (HomePage, GalleryPage, ServicesPage)
+  views/                route-level compositions (HomePage, GalleryPage, ServicesPage)
   sections/
     home/               homepage sections (Hero, ServiceMenu, TeamSection, …)
     services/           services-route sections (ServicesCategories, ServiceDetailPage, …)
