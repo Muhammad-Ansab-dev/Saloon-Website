@@ -12,17 +12,21 @@
 //   gallery(id, image, alt, caption, category, sort_order)
 //   bookings(id, service_id, service_name, stylist_name, date,
 //            time, client_name, client_email, client_phone,
-//            notes, created_at)
+//            status, created_at)
 //
 // Schema is created idempotently on first use, then seeded once
 // from the TS defaults in data/salonData.ts / galleryData.ts.
 // Collections are replaced wholesale on save (DELETE + INSERT in a
 // transaction) so admin "Save" semantics stay identical to before.
+// Bookings: created as `confirmed` by /api/booking; status changes go
+// through a targeted UPDATE (updateBooking), not a full rewrite.
 //   collections: services, stylists, gallery, bookings, brands
 // ─────────────────────────────────────────────────────────────
 import { Pool } from 'pg';
 import { SERVICES, STYLISTS } from '../data/salonData';
 import { GALLERY_ITEMS } from '../data/galleryData';
+
+export type BookingStatus = 'pending' | 'confirmed' | 'completed' | 'cancelled';
 
 export interface Booking {
   id: string;
@@ -36,7 +40,7 @@ export interface Booking {
   clientPhone: string;
   notes?: string;
   createdAt: string;
-  status?: 'pending' | 'confirmed' | 'completed' | 'cancelled';
+  status?: BookingStatus;
 }
 
 export type ServiceRow = {
@@ -133,7 +137,7 @@ CREATE TABLE IF NOT EXISTS bookings (
   client_email TEXT NOT NULL DEFAULT '',
   client_phone TEXT NOT NULL DEFAULT '',
   notes TEXT NOT NULL DEFAULT '',
-  status TEXT NOT NULL DEFAULT 'pending',
+  status TEXT NOT NULL DEFAULT 'confirmed',
   created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 `;
@@ -148,7 +152,7 @@ async function ensureSchema(): Promise<void> {
       const pool = getPool();
       await pool.query(SCHEMA_SQL);
       await pool.query(
-        `ALTER TABLE bookings ADD COLUMN IF NOT EXISTS status TEXT NOT NULL DEFAULT 'pending'`
+        `ALTER TABLE bookings ADD COLUMN IF NOT EXISTS status TEXT NOT NULL DEFAULT 'confirmed'`
       );
       const { rows } = await pool.query(
         'SELECT COUNT(*)::int AS n FROM services'
@@ -311,6 +315,30 @@ export async function setCollection<K extends keyof ContentCollections>(
 ): Promise<void> {
   await ensureSchema();
   await withWriteLock(() => replaceCollection(key, value));
+}
+
+/** Update one booking field in place (targeted UPDATE, no full-table
+ * rewrite). Returns the number of rows affected — 0 means "not found".
+ * Runs through the serial write queue so it never interleaves with a
+ * wholesale save. New bookings are created as `confirmed` by the public
+ * /api/booking endpoint, so admins rarely need to touch status. */
+export async function updateBooking(
+  id: string,
+  patch: { status?: BookingStatus }
+): Promise<number> {
+  await ensureSchema();
+  const pool = getPool();
+  let affected = 0;
+  await withWriteLock(async () => {
+    if (patch.status) {
+      const res = await pool.query('UPDATE bookings SET status = $1 WHERE id = $2', [
+        patch.status,
+        id,
+      ]);
+      affected = res.rowCount ?? 0;
+    }
+  });
+  return affected;
 }
 
 /** Core replace-one-collection logic (must be called while holding the lock —

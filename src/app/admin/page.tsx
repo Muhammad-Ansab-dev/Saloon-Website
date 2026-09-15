@@ -233,14 +233,14 @@ export default function AdminDashboard() {
         body: JSON.stringify({ id, patch: { status } }),
       });
       if (!res.ok) {
-        const data = await res.json();
-        setError(data.error ?? 'Failed to update booking status.');
+        const data = await res.json().catch(() => null);
+        setError((data && data.error) || `Failed to update booking (HTTP ${res.status}).`);
         return;
       }
       setBookings((prev) => prev.map((b) => (b.id === id ? { ...b, status } : b)));
       flash(`Booking ${status}`);
     } catch {
-      setError('Network error while updating booking.');
+      setError('Network error while updating booking. Check that the server is running, then try again.');
     }
   };
 

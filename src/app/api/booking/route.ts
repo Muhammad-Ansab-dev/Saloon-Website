@@ -4,6 +4,7 @@ import { Booking, getCollection, updateContent } from '@/lib/store';
 // Public booking submission from BookingModal. Validates the payload,
 // rejects clashing bookings (same stylist + date + time), and appends to
 // the bookings collection (admin sees it in the bookings inbox).
+// New bookings are created as `confirmed` — no manual approval step.
 export async function POST(request: Request) {
   let body: Record<string, unknown>;
   try {
@@ -65,7 +66,7 @@ export async function POST(request: Request) {
     clientEmail: email,
     clientPhone: phone,
     notes,
-    status: 'pending',
+    status: 'confirmed',
     createdAt,
   };
 

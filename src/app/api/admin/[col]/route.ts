@@ -1,5 +1,10 @@
 import { NextResponse } from 'next/server';
-import { Booking, getCollection, setCollection, updateContent } from '@/lib/store';
+import {
+  BookingStatus,
+  getCollection,
+  setCollection,
+  updateBooking,
+} from '@/lib/store';
 
 const EDITABLE = ['services', 'stylists', 'gallery'] as const;
 type Editable = (typeof EDITABLE)[number];
@@ -8,8 +13,12 @@ function isEditable(v: string): v is Editable {
   return (EDITABLE as readonly string[]).includes(v);
 }
 
-const BOOKING_STATUSES = ['pending', 'confirmed', 'completed', 'cancelled'] as const;
-type BookingStatus = (typeof BOOKING_STATUSES)[number];
+const BOOKING_STATUSES: readonly BookingStatus[] = [
+  'pending',
+  'confirmed',
+  'completed',
+  'cancelled',
+];
 function isBookingStatus(v: string): v is BookingStatus {
   return (BOOKING_STATUSES as readonly string[]).includes(v);
 }
@@ -22,6 +31,8 @@ function isBookingStatus(v: string): v is BookingStatus {
  *   DELETE /api/admin/bookings    → delete one booking  (body: { id })
  *   POST /api/admin/[col]/reset   → restore seed defaults
  * The bookings collection is created via /api/booking (public form).
+ * New bookings are auto-created as `confirmed` (see /api/booking), so the
+ * admin only ever moves a booking to completed / cancelled.
  */
 export async function PATCH(
   request: Request,
@@ -40,35 +51,23 @@ export async function PATCH(
   }
   const id = typeof body.id === 'string' ? body.id : '';
   const patch = body.patch && typeof body.patch === 'object' ? (body.patch as Record<string, unknown>) : {};
+  const status = typeof patch.status === 'string' ? patch.status : '';
   if (!id) {
     return NextResponse.json({ error: 'Booking id is required' }, { status: 400 });
   }
-
-  let updated: Booking | null = null;
-  let found = false;
-  await updateContent((current) => {
-    const bookings = current.bookings.map((b) => {
-      if (b.id !== id) return b;
-      found = true;
-      if (patch.status === undefined || !isBookingStatus(String(patch.status))) {
-        return b;
-      }
-      updated = { ...b, status: String(patch.status) as BookingStatus };
-      return updated;
-    });
-    return { ...current, bookings };
-  });
-
-  if (!found) {
-    return NextResponse.json({ error: 'Booking not found' }, { status: 404 });
-  }
-  if (!updated) {
+  if (!isBookingStatus(status)) {
     return NextResponse.json(
       { error: 'Invalid status — expected pending, confirmed, completed or cancelled' },
       { status: 400 }
     );
   }
-  return NextResponse.json({ ok: true, booking: updated });
+
+  const affected = await updateBooking(id, { status });
+  if (affected === 0) {
+    return NextResponse.json({ error: 'Booking not found' }, { status: 404 });
+  }
+  const booking = (await getCollection('bookings')).find((b) => b.id === id) ?? null;
+  return NextResponse.json({ ok: true, booking });
 }
 
 export async function DELETE(
