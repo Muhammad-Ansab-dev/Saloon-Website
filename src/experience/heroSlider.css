@@ -1,0 +1,154 @@
+/* ─────────────────────────────────────────────
+   heroSlider.css — styles for the Hero homepage section
+   hero: fullscreen background image with four overlay
+   boxes in a row above it. Imported by
+   components/sections/home/Hero.tsx.
+   ───────────────────────────────────────────── */
+
+.vfx-hero {
+  position: relative;
+  isolation: isolate;
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+  left: 50%;
+  margin-left: -50vw;
+  background: #000;
+  opacity: 0;
+  transition: opacity 1.5s ease-in;
+  pointer-events: none;
+  user-select: none;
+}
+
+.vfx-hero.loaded {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* ── Fullscreen backgrounds (stacked, crossfade) ── */
+.vfx-hero-backgrounds {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+}
+
+.vfx-hero-background {
+  position: absolute;
+  inset: 0;
+  background-size: cover;
+  background-position: center;
+  opacity: 0;
+  transform: scale(1.06);
+  transition: opacity 1.2s cubic-bezier(0.4, 0, 0.2, 1),
+    transform 1.6s cubic-bezier(0.33, 1, 0.68, 1);
+  will-change: opacity, transform;
+}
+
+.vfx-hero-background.active {
+  opacity: 1;
+  transform: scale(1);
+}
+
+/* ── 4 overlay boxes in a row ── */
+.vfx-boxes {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+}
+
+.vfx-box {
+  border-right: 1px solid rgba(255, 255, 255, 0.3);
+  background: transparent;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  color: #ffffff;
+  transition: background 0.9s cubic-bezier(0.22, 1, 0.36, 1),
+    backdrop-filter 0.9s cubic-bezier(0.22, 1, 0.36, 1),
+    -webkit-backdrop-filter 0.9s cubic-bezier(0.22, 1, 0.36, 1);
+  will-change: background, backdrop-filter;
+}
+
+.vfx-box:hover {
+  background: rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+}
+
+/* Outer container — pinned to bottom of the box, full width */
+.vfx-box-outer {
+  width: 100%;
+}
+
+/* Text container — left-aligned, same left margin & bottom for every box */
+.vfx-box-text-container {
+  display: flex;
+  justify-content: flex-start;
+  width: 100%;
+  padding-left: 32px;
+}
+
+.vfx-box-text {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 10px;
+  margin-bottom: 32px;
+  padding-right: 24px;
+  text-align: left;
+  font-family: 'Belleza', sans-serif;
+}
+
+.vfx-box-description {
+  font-size: 16px;
+  font-weight: 400;
+  line-height: 1.5;
+  color: rgba(255, 255, 255, 0.9);
+  max-width: 34ch;
+  opacity: 0;
+  max-height: 0;
+  overflow: hidden;
+  transform: translateY(12px);
+  transition: opacity 0.7s cubic-bezier(0.22, 1, 0.36, 1),
+    transform 0.7s cubic-bezier(0.22, 1, 0.36, 1),
+    max-height 0.7s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.vfx-box:hover .vfx-box-description {
+  opacity: 1;
+  transform: translateY(0);
+  max-height: 120px;
+}
+
+.vfx-box-accent {
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+.vfx-box-title {
+  font-size: 1.647em;
+  font-weight: 400;
+  line-height: 1.25;
+  color: #ffffff;
+  max-width: 22ch;
+}
+
+.vfx-box:last-child {
+  border-right: none;
+}
+
+@media (max-width: 768px) {
+  .vfx-boxes {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 480px) {
+  .vfx-boxes {
+    grid-template-columns: 1fr;
+  }
+}

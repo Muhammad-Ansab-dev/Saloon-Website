@@ -2,7 +2,7 @@
 
 Editorial luxury hair salon & haircare studio website: interactive home page, full services menu (category landing → category pages → service detail), gallery with filterable image grid, 3D coverflow testimonials, about page with stats marquee + team, appointments booking flow, and a luxury product cart.
 
-Built with **Next.js 15 (App Router)**, **React 19**, **TypeScript**, **Tailwind CSS v4**, and **motion** (framer-motion). Animations are composed from a small shared primitive library (`components/ScrollReveal.tsx`) plus a few scoped CSS files under `experience/`.
+Built with **Next.js 15 (App Router)**, **React 19**, **TypeScript**, **Tailwind CSS v4**, and **motion** (framer-motion). Animations are composed from a small shared primitive library (`src/components/ui/ScrollReveal.tsx`) plus a few scoped CSS files under `src/experience/`.
 
 ---
 
@@ -25,29 +25,38 @@ pnpm lint         # type-check only (tsc --noEmit)
 ## Project structure
 
 ```
-app/                    App Router routes
-  page.tsx              /            — homepage (views/HomePage.tsx)
-  about/page.tsx        /about       — about page (AboutPage)
-  services/page.tsx     /services    — category landing grid
-  services/[id]/page.tsx /services/<slug-or-id> — resolves category page OR service detail
-  gallery/page.tsx      /gallery     — filterable image grid
-  contact/page.tsx      /contact     — contact + locations + form
-  layout.tsx            — root shell: fonts, metadata, Providers
-  globals.css           — Tailwind v4, brand tokens, marquee, utilities
+src/                    source root (standard Next.js src/ layout)
+  app/                  App Router routes (thin — wrap a page composition)
+    page.tsx            /            — homepage (src/pages/HomePage.tsx)
+    about/page.tsx      /about       — about page (src/sections/about/AboutPage.tsx)
+    services/page.tsx   /services    — category landing grid
+    services/[id]/page.tsx /services/<slug-or-id> — resolves category page OR service detail
+    gallery/page.tsx    /gallery     — filterable image-grid page
+    contact/page.tsx    /contact     — contact + locations + inline booking form
+    layout.tsx          — root shell: fonts, metadata, Providers
+    globals.css         — Tailwind v4, brand tokens, marquee, utilities
+    api/                — route handlers (/api/content, /api/booking, /api/admin/*, …)
+    admin/              — admin dashboard (login + content management)
+  pages/                route-level compositions (HomePage, GalleryPage, ServicesPage)
+  sections/
+    home/               homepage sections (Hero, ServiceMenu, TeamSection, …)
+    services/           services-route sections (ServicesCategories, ServiceDetailPage, …)
+    about/              about page section (AboutPage)
+    contact/            contact page section (ContactPage)
+  components/           shared/reusable components
+    booking/            shared booking flow (BookingModal, BookingForm, DatePickerField)
+    cart/               CartDrawer, ProductModal, ProductBottleVisual
+    layout/             Providers, Header, Footer, FloatingWidget
+    ui/                 shared primitives (ScrollReveal)
+  hooks/                client hooks shared across pages
+    useSiteContent.ts   mirrors admin collections into the public site
+  data/                 single source of truth static content
+    salonData.ts        partners, products, press, testimonials, services, stylists, locations
+    galleryData.ts      gallery items + filter categories
+  experience/           scoped CSS for hero slider, service menu, service detail
+  types.ts              shared TypeScript interfaces
+  middleware.ts         auth guard for /admin routes + /api/admin
 
-views/                  thin page compositions (HomePage, GalleryPage, ServicesPage)
-
-components/             all React components (sections, modals, shell)
-  Providers.tsx         global context + layout shell (header/footer/modals/cart/booking)
-  ScrollReveal.tsx      shared animation primitives (ScrollReveal, SpringReveal, Parallax)
-  ...                    section and page components (each header-commented)
-
-data/                   single source of truth static content
-  salonData.ts          partners, products, press, testimonials, services, stylists, locations
-  galleryData.ts        gallery items + filter categories
-
-experience/             scoped CSS for hero, service menu, svc detail, legacy showcases
-types.ts                shared TypeScript interfaces
 vercel.json             Vercel build config for Next.js
 ```
 
@@ -55,16 +64,16 @@ vercel.json             Vercel build config for Next.js
 
 | URL | Route | Purpose |
 | --- | --- | --- |
-| `/` | `app/page.tsx` | Homepage: VfxHero → PartnerBar → About → ServiceMenu → LookbookTrio → TeamSection → TestimonialGrid → VisitUs → Newsletter |
-| `/about` | `app/about/page.tsx` | Stats marquee, story, philosophy, team grid (2-col), journey timeline, locations |
-| `/services` | `app/services/page.tsx` | Heading + 6 category cards |
-| `/services/<slug>` | `app/services/[id]/page.tsx` | Category page (all services in that category) **or** service detail, resolved by slug |
-| `/gallery` | `app/gallery/page.tsx` | Heading → filter pills → fade grid |
-| `/contact` | `app/contact/page.tsx` | Locations, hours, form, CTA |
+| `/` | `src/app/page.tsx` | Homepage: Hero → PartnerBar → About → ServiceMenu → LookbookTrio → TeamSection → TestimonialGrid → VisitUs → Newsletter |
+| `/about` | `src/app/about/page.tsx` | Stats marquee, story, philosophy, team grid (2-col), journey timeline, locations |
+| `/services` | `src/app/services/page.tsx` | Heading + 6 category cards |
+| `/services/<slug>` | `src/app/services/[id]/page.tsx` | Category page (all services in that category) **or** service detail, resolved by slug |
+| `/gallery` | `src/app/gallery/page.tsx` | Heading → filter pills → fade grid |
+| `/contact` | `src/app/contact/page.tsx` | Locations, hours, form, CTA |
 
 ### Booking / cart workflow
 
-All state lives in `components/Providers.tsx` (React context):
+All state lives in `src/components/layout/Providers.tsx` (React context):
 
 - **Book flow:** any "Book now" → `onSelectServiceForBooking(service)` → `BookingModal` opens pre-selected, styled by chosen service → user picks date/time/stylist → submits.
 - **Cart flow:** product card → `ProductModal` → `onAddToCart(product)` → `CartDrawer` (quantity +/-, remove, clear). Cart count is shown in `Header` and the `FloatingWidget`.
@@ -74,18 +83,18 @@ All state lives in `components/Providers.tsx` (React context):
 
 ## Services data & categories
 
-Categories (`data/salonData.ts` → `SERVICES[].category`):
+Categories (`src/data/salonData.ts` → `SERVICES[].category`):
 `Cut & Style`, `Style & Finish`, `Wash & Refresh`, `Color & Cut`, `Cut & Texture`, `Bridal & Occasion`.
 
-- `/services` grid (`components/ServicesCategories.tsx`) derives its cards automatically from the data.
+- `/services` grid (`src/sections/services/ServicesCategories.tsx`) derives its cards automatically from the data.
 - Category slugs are generated by `categorySlug()` (lowercased, non-alphanumerics → `-`).
-- `/services/<slug>` is handled by `app/services/[id]/page.tsx`, which resolves the param to a category first, then falls back to a service id, else a 404.
+- `/services/<slug>` is handled by `src/app/services/[id]/page.tsx`, which resolves the param to a category first, then falls back to a service id, else a 404.
 
 ## Styling conventions
 
 - **Editorial headings:** `font-editorial` (Syne) with `font-black uppercase tracking-tight`.
 - **Script accents:** `font-script` (Caveat); serif luxury: `font-serif-luxury` (Playfair).
-- **Brand blush:** `--color-blush*` tokens defined in `app/globals.css`.
+- **Brand blush:** `--color-blush*` tokens defined in `src/app/globals.css`.
 - **Background paper tone:** `bg-[#f7f5ee]` used across content pages.
 - **Animations:** prefer the `ScrollReveal` / `SpringReveal` / `Parallax` primitives; use `motion/react` `AnimatePresence` for mounts/exits.
 
@@ -94,7 +103,16 @@ Categories (`data/salonData.ts` → `SERVICES[].category`):
 - Hosted on **Vercel**. `vercel.json` sets `buildCommand: pnpm build` and `outputDirectory: .next` (required — the account previously had Vite/`dist` defaults).
 - Git remote: `git@github.com:Muhammad-Ansab-dev/Saloon-Website.git` (`main`).
 
-## Legacy / unused components
+## Structure notes
 
-The following components exist for reference/experiments but are **not** currently rendered by any route:
-`Stylists`, `TestimonialQuote`, `Welcome`, `HeroStudio`, `GalleryExperience`, `GridZoomServices`, `ServicesShop`, `BestSellers`, `PressSection`, `InstagramGrid`, `ArticleModal`, `ProductBottleVisual`, `InteractiveBooking` (see `experience/*.css` counterparts).
+- `src/components/` holds all UI. Booking is consolidated under `src/components/booking/`:
+  `BookingModal` (overlay chrome + confetti), `BookingForm` (the single reusable
+  appointment form shared by the modal and the /contact page), and
+  `DatePickerField` (custom calendar that opens downward).
+- `src/hooks/useSiteContent.ts` is the shared client hook that mirrors admin-managed
+  collections (`/api/content`) into the public site with static fallbacks.
+- `src/lib/bookingTime.ts` centralises salon hours and date/time helpers so every
+  booking surface stays consistent.
+- `src/lib/store.ts` is the PostgreSQL content store (schema + seed + serialised
+  writes) backing `/api/content`, `/api/booking`, `/api/availability` and the
+  `/api/admin/*` endpoints.
