@@ -1,4 +1,5 @@
 "use client"
+// Separator — base-ui divider (horizontal/vertical); shared UI primitive.
 
 import { Separator as SeparatorPrimitive } from "@base-ui/react/separator"
 import { cn } from "cn"

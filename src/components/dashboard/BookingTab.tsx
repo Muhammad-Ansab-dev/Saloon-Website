@@ -97,9 +97,6 @@ const statusConfig = {
   cancelled: { label: 'Cancelled', color: 'oklch(0.637 0.237 25.331)' },
   pending:   { label: 'Pending',   color: 'oklch(0.795 0.184 86.047)' },
 } satisfies ChartConfig;
-const stylistConfig = {
-  count: { label: 'Bookings', color: 'oklch(0.623 0.214 259.815)' },
-} satisfies ChartConfig;
 const sparkConfig = {
   total:     { label: 'Total',     color: 'oklch(0.488 0.243 264.376)' },
   confirmed: { label: 'Confirmed', color: 'oklch(0.723 0.219 149.579)' },
@@ -200,23 +197,6 @@ export function BookingTab() {
       full: e,
     }));
 
-    const stylistCounts: Record<string, number> = {};
-    const serviceCounts: Record<string, number> = {};
-    for (const b of bookings) {
-      if (!inWindow(b.date)) continue;
-      if (b.stylistName) stylistCounts[b.stylistName] = (stylistCounts[b.stylistName] || 0) + 1;
-      serviceCounts[b.serviceName] = (serviceCounts[b.serviceName] || 0) + 1;
-    }
-
-    const stylistData = Object.entries(stylistCounts)
-      .map(([name, count]) => ({ name, count }))
-      .sort((a, b) => b.count - a.count)
-      .slice(0, 8);
-
-    const serviceData = Object.entries(serviceCounts)
-      .map(([name, count]) => ({ name, count }))
-      .sort((a, b) => b.count - a.count);
-
     const statusData = [
       { key: 'confirmed', name: 'Confirmed', value: statusCounts.confirmed },
       { key: 'completed', name: 'Completed', value: statusCounts.completed },
@@ -224,23 +204,7 @@ export function BookingTab() {
       { key: 'pending',   name: 'Pending',   value: statusCounts.pending },
     ];
 
-    // revenue from services with known prices (use a simple lookup) — windowed
-    const PRICE_MAP: Record<string, number> = {
-      'HAIRCUT WITH BLOW DRY': 38, 'BLOW DRY & CURL': 49, 'SHAMPOO & SET': 29,
-      'HAIRCUT WITH HIGHLIGHTS': 79, 'HAIRCUT & CURL': 59, 'BEARD SCULPT & SHAPE': 35,
-      'GLAZE & GLOSS': 55, 'DEEP CONDITIONING RITUAL': 45, 'EDITORIAL UPDO': 65,
-      'BALAYAGE & TONER': 95, 'CURL REVIVAL SET': 49, 'CORPORATE BLOW DRY': 359090,
-    };
-    let totalRevenue = 0; let paid = 0;
-    for (const b of bookings) {
-      if (!inWindow(b.date) || b.status === 'cancelled') continue;
-      totalRevenue += PRICE_MAP[b.serviceName] || 50;
-      paid += 1;
-    }
-
-    const activeClients = new Set(bookings.filter((b) => inWindow(b.date) && b.status !== 'cancelled').map((b) => b.clientEmail)).size;
-
-    return { total, statusCounts, stylistData, serviceData, statusData, bucketed, bookingsTrend, totalRevenue, activeClients };
+    return { total, statusCounts, statusData, bucketed, bookingsTrend };
   }, [bookings, period, trendStatus]);
 
   // ── List filtering (search + date preset, All/Today Bookings views) ─────
@@ -253,7 +217,7 @@ export function BookingTab() {
     const q = search.trim().toLowerCase();
     return bookings.filter((b) => {
       if (activeFilter === 'today') {
-        if (b.date !== todayISO) return false;
+        if (b.date !== todayISO()) return false;
       } else if (activeFilter === 'custom') {
         if (!customDate || b.date !== customDate) return false;
       } else if (win) {
@@ -267,7 +231,7 @@ export function BookingTab() {
     });
   }, [bookings, search, dateFilter, customDate, view]);
 
-  // ── Status update / delete (same as BookingInbox) ──────────────────────
+  // ── Status update / delete ─────────────────────────────────────────────
   const updateStatus = async (id: string, status: BookingRow['status']) => {
     const res = await fetch('/api/admin/bookings', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id, patch: { status } }) });
     if (res.ok) setBookings((prev) => prev.map((b) => (b.id === id ? { ...b, status } : b)));

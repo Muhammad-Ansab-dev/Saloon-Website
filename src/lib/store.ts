@@ -99,7 +99,12 @@ function getPool(): Pool {
   if (!g[POOL_KEY]) {
     const connectionString =
       process.env.DATABASE_URL ??
-      'postgres://salon:salon_dev_2026@localhost:5432/salon';
+      (process.env.NODE_ENV === 'production'
+        ? ''
+        : 'postgres://salon:salon_dev_2026@localhost:5432/salon');
+    if (!connectionString) {
+      throw new Error('DATABASE_URL is not configured');
+    }
     g[POOL_KEY] = new Pool({ connectionString });
   }
   return g[POOL_KEY];
@@ -228,7 +233,12 @@ async function ensureSchema(): Promise<void> {
       if (rows[0].n === 0) {
         await seedFromDefaults();
       }
-    })();
+    })().catch((err) => {
+      // Reset so a later request can retry after a transient failure
+      // (otherwise every subsequent call would await the same rejection).
+      initPromise = null;
+      throw err;
+    });
   }
   return initPromise;
 }

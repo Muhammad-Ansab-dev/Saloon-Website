@@ -1,4 +1,5 @@
 "use client"
+// Tabs — base-ui tabs (list/trigger/content) with CVA variants; used by the dashboard.
 
 import { Tabs as TabsPrimitive } from "@base-ui/react/tabs"
 import { cva, type VariantProps } from "class-variance-authority"

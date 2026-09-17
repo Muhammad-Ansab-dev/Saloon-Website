@@ -15,8 +15,6 @@ import { Calendar } from 'lucide-react';
 import { motion } from 'motion/react';
 
 interface FloatingWidgetProps {
-  cartCount?: number;
-  onOpenCart?: () => void;
   onOpenBooking: () => void;
 }
 

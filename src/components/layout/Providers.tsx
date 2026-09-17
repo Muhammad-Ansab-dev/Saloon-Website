@@ -9,14 +9,13 @@
 // Exposes useSite() hook with: onBookNow, onSelectServiceForBooking, onOpenCart,
 // onOpenProduct, and onAddToCart.
 //
-// Dependencies: salonData (PRODUCTS), types (Product, CartItem, ServiceItem),
-// and every global component it renders (Header, Footer, FloatingWidget,
-// CartDrawer, BookingModal, ProductModal).
+// Dependencies: types (Product, CartItem, ServiceItem) and every global
+// component it renders (Header, Footer, FloatingWidget, CartDrawer,
+// BookingModal, ProductModal).
 // ---------------------------------------------------------------------------
 
 import React, { createContext, useContext, useState } from 'react';
-import { useRouter, usePathname } from 'next/navigation';
-import { PRODUCTS } from '@/data/salonData';
+import { usePathname } from 'next/navigation';
 import { Product, CartItem, ServiceItem } from '@/types';
 import { Header } from './Header';
 import { Footer } from './Footer';
@@ -46,9 +45,7 @@ export const useSite = () => useContext(SiteContext);
 export const Providers: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
-  const [cartItems, setCartItems] = useState<CartItem[]>([
-    { product: PRODUCTS[0], quantity: 1 },
-  ]);
+  const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [isBookingOpen, setIsBookingOpen] = useState(false);
   const [bookingPreSelect, setBookingPreSelect] = useState<{
@@ -59,16 +56,29 @@ export const Providers: React.FC<{ children: React.ReactNode }> = ({
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
 
   const pathname = usePathname();
+  const isDashboard = pathname.startsWith('/dashboard');
 
   React.useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'auto' });
     // Close all overlays when entering the dashboard area so site modals don't bleed through.
-    if (pathname.startsWith('/dashboard')) {
+    if (isDashboard) {
       setIsBookingOpen(false);
       setIsCartOpen(false);
       setSelectedProduct(null);
+      return;
     }
-  }, [pathname]);
+    // Deep link support: Header sends "/?scrollTo=<sectionId>" from non-home
+    // routes. Scroll to that section, then strip the query param.
+    const target = new URLSearchParams(window.location.search).get('scrollTo');
+    if (target) {
+      requestAnimationFrame(() => {
+        document.getElementById(target)?.scrollIntoView({ behavior: 'smooth' });
+      });
+      const url = new URL(window.location.href);
+      url.searchParams.delete('scrollTo');
+      window.history.replaceState({}, '', `${url.pathname}${url.search}${url.hash}`);
+    }
+  }, [pathname, isDashboard]);
 
   const handleAddToCart = (product: Product, quantity = 1) => {
     setCartItems((prev) => {
@@ -134,7 +144,7 @@ export const Providers: React.FC<{ children: React.ReactNode }> = ({
       }}
     >
       <div className="min-h-screen bg-white text-black flex flex-col selection:bg-black selection:text-white font-sans antialiased">
-        {!pathname.startsWith('/admin') && !pathname.startsWith('/dashboard') && (
+        {!isDashboard && (
           <Header
             cartCount={totalCartCount}
             onOpenCart={() => setIsCartOpen(true)}
@@ -145,40 +155,36 @@ export const Providers: React.FC<{ children: React.ReactNode }> = ({
 
         <main className="flex-1">{children}</main>
 
-        {!pathname.startsWith('/admin') && !pathname.startsWith('/dashboard') && (
-          <Footer onScrollToTop={handleScrollToTop} />
+        {!isDashboard && <Footer onScrollToTop={handleScrollToTop} />}
+
+        {!isDashboard && <FloatingWidget onOpenBooking={handleOpenBooking} />}
+
+        {!isDashboard && (
+          <>
+            <CartDrawer
+              isOpen={isCartOpen}
+              onClose={() => setIsCartOpen(false)}
+              cartItems={cartItems}
+              onUpdateQuantity={handleUpdateQuantity}
+              onRemoveItem={handleRemoveItem}
+              onClearCart={handleClearCart}
+            />
+
+            <BookingModal
+              isOpen={isBookingOpen}
+              onClose={() => setIsBookingOpen(false)}
+              preSelectedService={bookingPreSelect.service}
+              preSelectedDate={bookingPreSelect.date}
+              preSelectedTime={bookingPreSelect.time}
+            />
+
+            <ProductModal
+              product={selectedProduct}
+              onClose={() => setSelectedProduct(null)}
+              onAddToCart={handleAddToCart}
+            />
+          </>
         )}
-
-        {!pathname.startsWith('/admin') && !pathname.startsWith('/dashboard') && (
-          <FloatingWidget
-            cartCount={totalCartCount}
-            onOpenCart={() => setIsCartOpen(true)}
-            onOpenBooking={handleOpenBooking}
-          />
-        )}
-
-        <CartDrawer
-          isOpen={isCartOpen}
-          onClose={() => setIsCartOpen(false)}
-          cartItems={cartItems}
-          onUpdateQuantity={handleUpdateQuantity}
-          onRemoveItem={handleRemoveItem}
-          onClearCart={handleClearCart}
-        />
-
-        <BookingModal
-          isOpen={isBookingOpen}
-          onClose={() => setIsBookingOpen(false)}
-          preSelectedService={bookingPreSelect.service}
-          preSelectedDate={bookingPreSelect.date}
-          preSelectedTime={bookingPreSelect.time}
-        />
-
-        <ProductModal
-          product={selectedProduct}
-          onClose={() => setSelectedProduct(null)}
-          onAddToCart={handleAddToCart}
-        />
       </div>
     </SiteContext.Provider>
   );

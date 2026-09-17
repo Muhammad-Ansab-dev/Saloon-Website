@@ -1,9 +1,8 @@
-'use client';
 // ─────────────────────────────────────────────────────────────
-// Route entry for "/about" — wraps the AboutPage presentation
-// (stats marquee, story, team grid, journey timeline, locations).
+// Route entry for "/about" — renders the AboutPage composition
+// (hero, stats, story, founder, values, team, timeline, CTA).
 // ─────────────────────────────────────────────────────────────
-import { AboutPage } from '@/sections/about/AboutPage';
+import { AboutPage } from '@/views/AboutPage';
 
 export default function Page() {
   return <AboutPage />;

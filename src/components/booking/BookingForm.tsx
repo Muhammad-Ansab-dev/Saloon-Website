@@ -43,7 +43,7 @@ export const BookingForm: React.FC<BookingFormProps> = ({
     preSelectedService?.id || services[0]?.id || ''
   );
   const [selectedStylistId, setSelectedStylistId] = useState<string>(stylists[0]?.id || '');
-  const [bookingDate, setBookingDate] = useState<string>(preSelectedDate || todayISO);
+  const [bookingDate, setBookingDate] = useState<string>(preSelectedDate || todayISO());
   const [bookingTime, setBookingTime] = useState<string>(preSelectedTime || '');
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');

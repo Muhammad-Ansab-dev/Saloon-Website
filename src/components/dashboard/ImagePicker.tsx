@@ -1,4 +1,10 @@
 'use client';
+// ─────────────────────────────────────────────────────────────
+// ImagePicker — reusable image field for dashboard editors: shows the
+// current image, opens a file dialog (≤25 MB) that POSTs to
+// /api/admin/upload, and accepts a pasted external URL. Used by the
+// Services, Stylists and Media panels.
+// ─────────────────────────────────────────────────────────────
 
 import { useRef, useState } from 'react';
 import { ImagePlus, Loader2, RefreshCw, Lock } from 'lucide-react';

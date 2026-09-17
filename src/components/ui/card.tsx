@@ -1,3 +1,4 @@
+// Card — composable surface (Header/Title/Description/Action/Content/Footer) used by the dashboard.
 import * as React from "react"
 import { cn } from "cn"
 

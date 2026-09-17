@@ -1,11 +1,11 @@
 // ─────────────────────────────────────────────────────────────
-// galleryData.ts — static content for the /gallery page.
-// GALLERY_CATEGORIES drives the filter pills
-// (ALL + 4 disciplines); GALLERY_ITEMS is the image pool with a
-// caption and a category tag used by GalleryGrid for filtering.
-// GALLERY_VIDEO_IDS is the set of YouTube Shorts embedded on the
-// gallery page (6 vertical films). Consumed by:
-// views/GalleryPage.tsx.
+// galleryData.ts — static content for the /gallery route.
+// GALLERY_CATEGORIES drives the filter pills (ALL + 4
+// disciplines); GALLERY_ITEMS is the image pool with a caption
+// and a category tag; GALLERY_VIDEOS is the set of six vertical
+// editorial films (ordered 01–06); VIDEO_POSTERS maps each film
+// id to its Cloudinary poster. Consumed by views/GalleryPage.tsx
+// and sections/home/LookbookTrio.tsx.
 // ─────────────────────────────────────────────────────────────
 export interface GalleryItem {
   image: string;
@@ -15,16 +15,6 @@ export interface GalleryItem {
 }
 
 export const GALLERY_CATEGORIES = ['ALL', 'CUTTING', 'COLOUR', 'STYLING', 'SALON'];
-
-/** YouTube Shorts video IDs shown on the /gallery page. */
-export const GALLERY_VIDEO_IDS = [
-  'rr7ACX0M_0c',
-  'IUC_K7ZT0I0',
-  'RHr0md2bB74',
-  'hSwbZapaYrg',
-  'GID7VSX2ddk',
-  'IUC_K7ZT0I0',
-];
 
 /** Cloudinary URLs for the short-film posters (uploaded via scripts/migrate-cloudinary.mjs). */
 export const VIDEO_POSTERS: Record<string, string> = {
@@ -45,7 +35,7 @@ export interface GalleryVideo {
 
 export const GALLERY_VIDEOS: GalleryVideo[] = [
   { id: 'rr7ACX0M_0c', title: 'EDITORIAL FILM 01', style: 'Precision cutting', category: 'CUTTING' },
-  { id: 'IUC_K7ZT0I0', title: 'EDITORIAL FILM 06', style: 'Salon ritual', category: 'SALON' },
+  { id: 'j3L5MsVY3oE', title: 'EDITORIAL FILM 02', style: 'Salon ritual', category: 'SALON' },
   { id: 'RHr0md2bB74', title: 'EDITORIAL FILM 03', style: 'Editorial styling', category: 'STYLING' },
   { id: 'hSwbZapaYrg', title: 'EDITORIAL FILM 04', style: 'Texture in motion', category: 'CUTTING' },
   { id: 'GID7VSX2ddk', title: 'EDITORIAL FILM 05', style: 'Honey gloss shine', category: 'COLOUR' },

@@ -1,3 +1,10 @@
+// ─────────────────────────────────────────────────────────────
+// middleware.ts — route guard for the admin area. Verifies the signed
+// session cookie set by /api/auth/login. Protects /api/admin/* (401
+// JSON when unauthenticated) and the exact /dashboard route (redirect
+// to /dashboard/login?next=…). /dashboard/login itself is public; the
+// rest of the public site is untouched.
+// ─────────────────────────────────────────────────────────────
 import { NextRequest, NextResponse } from 'next/server';
 import { SESSION_COOKIE, verifySessionToken } from './lib/auth';
 

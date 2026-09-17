@@ -13,7 +13,7 @@
 // lucide-react icons, framer-motion (overlay animation).
 // Rendered by Providers.tsx.
 // ---------------------------------------------------------------------------
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Product } from '../../types';
 import { ProductBottleVisual } from './ProductBottleVisual';
 import { X, Check, Star, ShieldCheck, Sparkles, Plus, Minus } from 'lucide-react';
@@ -33,13 +33,25 @@ export const ProductModal: React.FC<ProductModalProps> = ({
   const [qty, setQty] = useState(1);
   const [activeTab, setActiveTab] = useState<'overview' | 'ingredients' | 'howTo'>('overview');
   const [added, setAdded] = useState(false);
+  const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    setQty(1);
+    setAdded(false);
+    setActiveTab('overview');
+  }, [product?.id]);
+
+  useEffect(() => () => {
+    if (closeTimer.current) clearTimeout(closeTimer.current);
+  }, []);
 
   if (!product) return null;
 
   const handleAdd = () => {
+    if (added) return;
     onAddToCart(product, qty);
     setAdded(true);
-    setTimeout(() => {
+    closeTimer.current = setTimeout(() => {
       setAdded(false);
       onClose();
     }, 1200);

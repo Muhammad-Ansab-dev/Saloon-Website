@@ -12,7 +12,7 @@
 // lucide-react icons, framer-motion (slide animation), canvas-confetti.
 // Rendered by Providers.tsx.
 // ---------------------------------------------------------------------------
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { CartItem } from '../../types';
 import { ProductBottleVisual } from './ProductBottleVisual';
 import { X, Trash2, Plus, Minus, ShoppingBag, ArrowRight, Check } from 'lucide-react';
@@ -38,6 +38,12 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
 }) => {
   const [isCheckingOut, setIsCheckingOut] = useState(false);
   const [orderCompleted, setOrderCompleted] = useState(false);
+  const timers = useRef<ReturnType<typeof setTimeout>[]>([]);
+
+  useEffect(() => {
+    const pending = timers.current;
+    return () => pending.forEach(clearTimeout);
+  }, []);
 
   const subtotal = cartItems.reduce(
     (sum, item) => sum + item.product.price * item.quantity,
@@ -45,21 +51,26 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
   );
 
   const handleCheckout = () => {
+    if (isCheckingOut || orderCompleted) return;
     setIsCheckingOut(true);
-    setTimeout(() => {
-      setIsCheckingOut(false);
-      setOrderCompleted(true);
-      confetti({
-        particleCount: 70,
-        spread: 70,
-        origin: { y: 0.6 },
-      });
+    timers.current.push(
       setTimeout(() => {
-        onClearCart();
-        setOrderCompleted(false);
-        onClose();
-      }, 3000);
-    }, 1200);
+        setIsCheckingOut(false);
+        setOrderCompleted(true);
+        confetti({
+          particleCount: 70,
+          spread: 70,
+          origin: { y: 0.6 },
+        });
+        timers.current.push(
+          setTimeout(() => {
+            onClearCart();
+            setOrderCompleted(false);
+            onClose();
+          }, 3000)
+        );
+      }, 1200)
+    );
   };
 
   return (

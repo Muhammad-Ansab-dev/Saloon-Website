@@ -1,3 +1,4 @@
+// Button — CVA-variant button built on the base-ui button primitive; shared UI primitive.
 import { Button as ButtonPrimitive } from "@base-ui/react/button"
 import { cva, type VariantProps } from "class-variance-authority"
 import { cn } from "cn"

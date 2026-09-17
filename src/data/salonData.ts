@@ -1,22 +1,14 @@
 // ─────────────────────────────────────────────────────────────
 // salonData.ts — THE single source of truth for all static site
-// content: brand name fonts (PARTNERS), the haircare product shop
-// (PRODUCTS), press articles (PRESS_ARTICLES), testimonials
+// content: the haircare product shop (PRODUCTS), testimonials
 // (TESTIMONIALS), the services menu with prices/durations/
 // categories (SERVICES) plus their media (SERVICE_MEDIA), the
-// booking stylists list (STYLISTS) and studio locations
-// (LOCATIONS). Consumed by virtually every component/page.
+// booking stylists list (STYLISTS), studio locations (LOCATIONS),
+// and the image CMS seed/fallback maps (SERVICE_IMAGE_BY_ID,
+// STYLIST_IMAGE_BY_ID, SITE_IMAGES_DEFAULTS). Consumed by
+// virtually every component/page.
 // ─────────────────────────────────────────────────────────────
-import { Product, ServiceItem, PressArticle, Testimonial, LookbookItem, LocationBranch } from '../types';
-
-export const PARTNERS = [
-  { id: '1', name: 'bed head', fontStyle: 'font-black tracking-tighter text-xl lowercase' },
-  { id: '2', name: 'HAIRCARE', fontStyle: 'font-script text-2xl font-bold tracking-wider' },
-  { id: '3', name: 'CURL', fontStyle: 'font-editorial font-bold tracking-widest text-xl uppercase' },
-  { id: '4', name: 'HAIRWAVE', fontStyle: 'font-sans font-light tracking-[0.25em] text-sm uppercase' },
-  { id: '5', name: 'ArganOil', fontStyle: 'font-serif-luxury text-xl italic font-semibold' },
-  { id: '6', name: 'BEAUTY SALON', fontStyle: 'font-sans text-xs tracking-[0.3em] font-bold uppercase' },
-];
+import { Product, ServiceItem, Testimonial, LocationBranch } from '../types';
 
 export const PRODUCTS: Product[] = [
   {
@@ -82,33 +74,6 @@ export const PRODUCTS: Product[] = [
     ingredients: ['Shea Butter Ethyl Esters', 'Hyaluronic Acid Micro-spheres', 'Jojoba Golden Oil', 'Oat Beta-Glucan'],
     howToUse: 'Apply a dime-sized amount to mid-lengths and ends before air-drying or blow-drying.',
     benefits: ['Effortless detangling', 'Natural wave definition', 'All-day hydration']
-  }
-];
-
-export const LOOKBOOK_ITEMS: LookbookItem[] = [
-  {
-    id: 'look-1',
-    title: 'TEXTURED SWEPT CROP',
-    model: 'Julian Vance',
-    style: 'Artistic Matte Texture',
-    image: 'https://res.cloudinary.com/dittrfbja/image/upload/v1789651071/hair-salon/hair-gallery1.webp',
-    alt: 'Male model with tousled wavy haircut'
-  },
-  {
-    id: 'look-2',
-    title: 'THE GOLDEN FLORA TWIST',
-    model: 'Elena Rostova',
-    style: 'Haute Couture Bridal Chignon',
-    image: 'https://res.cloudinary.com/dittrfbja/image/upload/v1789650831/hair-salon/lookbook-2.webp',
-    alt: 'Back view of elegant blonde hair twist with gold leaf ornament'
-  },
-  {
-    id: 'look-3',
-    title: 'EDITORIAL WET STRAND PROFILE',
-    model: 'Clara Delacroix',
-    style: 'High Fashion Sculpted Wet Look',
-    image: 'https://res.cloudinary.com/dittrfbja/image/upload/v1789650832/hair-salon/lookbook-3.webp',
-    alt: 'Side profile of female model with dark glossy styled hair strands'
   }
 ];
 
@@ -192,42 +157,6 @@ export const LOCATIONS: LocationBranch[] = [
     email: 'paris@paulhairstudio.com',
     telephone: '00 123 456 777',
     hours: 'Tue - Sat: 10:00 - 19:30'
-  }
-];
-
-export const PRESS_ARTICLES: PressArticle[] = [
-  {
-    id: 'press-1',
-    dateBadge: { month: 'Mar', day: '4' },
-    author: 'PAUL',
-    category: 'HAIR, MODERN',
-    title: 'MODERN HIGHLIGHTS SEASON TRENDS',
-    excerpt: 'Discover the revolutionary balayage and tone-feathering techniques defining this autumn’s haute couture runways.',
-    content: 'Hair color in the modern era is no longer about uniform saturation; it is an intimate play of light, shadow, and organic movement. At Paul Hair Studio, our signature multi-dimensional color placement illuminates the cheekbones and contours naturally without harsh demarcation lines.',
-    image: 'https://res.cloudinary.com/dittrfbja/image/upload/v1789650833/hair-salon/press-1.webp',
-    readTime: '4 min read'
-  },
-  {
-    id: 'press-2',
-    dateBadge: { month: 'Mar', day: '10' },
-    author: 'PAUL',
-    category: 'FRESH',
-    title: 'ECO FRIENDLY GENTLE HAIR CARE PRODUCTS',
-    excerpt: 'How clean bio-fermented ingredients are replacing synthetic polymers without compromising runway-grade performance.',
-    content: 'Sustainability is an uncompromising pillar of luxury. Our in-house botanical laboratory synthesizes plant squalane, cold-pressed marula, and cold-extracted oat lipids into microscopic delivery vehicles that penetrate the cortex effortlessly.',
-    image: 'https://res.cloudinary.com/dittrfbja/image/upload/v1789650834/hair-salon/press-2.webp',
-    readTime: '3 min read'
-  },
-  {
-    id: 'press-3',
-    dateBadge: { month: 'Mar', day: '16' },
-    author: 'PAUL',
-    category: 'HAIRSTYLE',
-    title: 'FAMOUS HAIRSTYLES AND PHOTOGRAPHY',
-    excerpt: 'Behind the lens with master photographer Lucas Stern exploring motion and silhouette in editorial portraiture.',
-    content: 'Hair is sculpture in motion. In our exclusive collaboration with European fashion houses, we explored how high-speed strobe photography captures the micro-second velocity of brushed tresses in atmospheric wind.',
-    image: 'https://res.cloudinary.com/dittrfbja/image/upload/v1789650836/hair-salon/press-3.webp',
-    readTime: '5 min read'
   }
 ];
 
@@ -380,44 +309,6 @@ export const SERVICE_MEDIA: Record<string, { image: string; alt: string }> = {
     alt: 'Sleek corporate blow dry with a polished finish'
   }
 };
-
-export const INSTAGRAM_POSTS = [
-  {
-    id: 'ig-1',
-    image: 'https://res.cloudinary.com/dittrfbja/image/upload/v1789650823/hair-salon/instagram-1.webp',
-    alt: 'Master stylist scissor work on textured male crop',
-    likes: '1.4k',
-    caption: 'Precision taper fade and natural flow by Master Paul.'
-  },
-  {
-    id: 'ig-2',
-    image: 'https://res.cloudinary.com/dittrfbja/image/upload/v1789650824/hair-salon/instagram-2.webp',
-    alt: 'Hand dispensing golden organic hair elixir serum',
-    likes: '890',
-    caption: 'Gold droplet drops: Pure cold-pressed botanical silk serum.'
-  },
-  {
-    id: 'ig-3',
-    image: 'https://res.cloudinary.com/dittrfbja/image/upload/v1789650825/hair-salon/instagram-3.webp',
-    alt: 'Sleek dark graphic bob cut on Asian female model',
-    likes: '2.1k',
-    caption: 'High-contrast graphic chin-length bob paired with crimson lip.'
-  },
-  {
-    id: 'ig-4',
-    image: 'https://res.cloudinary.com/dittrfbja/image/upload/v1789650827/hair-salon/instagram-4.webp',
-    alt: 'Brunette model showing honey gloss highlights and soft beach waves',
-    likes: '1.2k',
-    caption: 'Sun-drenched honey balayage for the upcoming gala season.'
-  },
-  {
-    id: 'ig-5',
-    image: 'https://res.cloudinary.com/dittrfbja/image/upload/v1789650834/hair-salon/press-2.webp',
-    alt: 'Paul haircare luxury amber glass bottles with pump dispenser',
-    likes: '950',
-    caption: 'Our signature restorative collection in recyclable matte glass.'
-  }
-];
 
 export const STYLISTS = [
   { id: 'paul', name: 'Paul Delacroix', role: 'Creative Director & Master Stylist' },

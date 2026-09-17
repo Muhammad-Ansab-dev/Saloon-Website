@@ -1,19 +1,20 @@
 'use client';
 // ---------------------------------------------------------------------------
 // Header — Fixed top navigation bar with responsive desktop nav, mobile drawer,
-// and "Book Now" CTA. Toggles between transparent (over hero) and solid (scrolled)
-// styles via scroll detection. Delegates navigation to page sections or routes.
+// a cart button with live item count, and a "Book Now" CTA. Toggles between
+// transparent (over hero) and solid (scrolled) styles via scroll detection.
+// Delegates navigation to page sections or routes.
 //
 // Workflow role: Global chrome — rendered by Providers on every page. Triggers
-// BookingModal via onOpenBooking, scrolls to sections via onNavigate, and drives
-// the mobile hamburger drawer for smaller viewports.
+// BookingModal via onOpenBooking, opens CartDrawer via onOpenCart, scrolls to
+// sections via onNavigate, and drives the mobile hamburger drawer.
 //
 // Dependencies: next/navigation (router, usePathname), lucide-react icons,
 // framer-motion (mobile drawer animation). Consumed only by Providers.tsx.
 // ---------------------------------------------------------------------------
 import React, { useState, useEffect } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
-import { Calendar, X, ArrowUpRight } from 'lucide-react';
+import { Calendar, X, ArrowUpRight, ShoppingBag } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
 interface HeaderProps {
@@ -110,6 +111,27 @@ export const Header: React.FC<HeaderProps> = ({
 
           {/* Right Action Controls */}
           <div className="flex items-center justify-end gap-4 sm:gap-7">
+            {/* Cart — opens the global CartDrawer with a live item count */}
+            <button
+              id="header-cart-btn"
+              onClick={onOpenCart}
+              className={`relative p-1 cursor-pointer transition-colors ${
+                isOverHero ? 'text-white hover:text-neutral-300' : 'text-black hover:text-neutral-500'
+              }`}
+              aria-label={`Open shopping bag${cartCount > 0 ? ` (${cartCount} items)` : ''}`}
+            >
+              <ShoppingBag className="w-5 h-5" />
+              {cartCount > 0 && (
+                <span
+                  className={`absolute -top-1.5 -right-1.5 min-w-[16px] h-4 px-1 rounded-full text-[9px] font-bold flex items-center justify-center ${
+                    isOverHero ? 'bg-white text-black' : 'bg-black text-white'
+                  }`}
+                >
+                  {cartCount}
+                </span>
+              )}
+            </button>
+
             {/* BOOK NOW Action */}
             <button
               id="header-book-now-btn"

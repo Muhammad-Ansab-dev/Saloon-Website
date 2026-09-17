@@ -18,7 +18,7 @@ interface DateFieldProps {
 
 export const DateField: React.FC<DateFieldProps> = ({ value, onChange, placeholder = 'Pick a date' }) => {
   const [open, setOpen] = useState(false);
-  const base = value || todayISO;
+  const base = value || todayISO();
   const [viewYear, setViewYear] = useState(() => new Date(base + 'T12:00:00').getFullYear());
   const [viewMonth, setViewMonth] = useState(() => new Date(base + 'T12:00:00').getMonth());
   const wrapRef = useRef<HTMLDivElement>(null);
@@ -81,7 +81,7 @@ export const DateField: React.FC<DateFieldProps> = ({ value, onChange, placehold
               const iso = toISODate(d);
               const inMonth = d.getMonth() === viewMonth;
               const selected = iso === value;
-              const isToday = iso === todayISO;
+              const isToday = iso === todayISO();
               return (
                 <button
                   key={iso}

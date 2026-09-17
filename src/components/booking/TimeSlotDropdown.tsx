@@ -47,8 +47,8 @@ export const TimeSlotDropdown: React.FC<TimeSlotDropdownProps> = ({
     return () => document.removeEventListener('keydown', onKey);
   }, [open]);
 
-  const disabled = slots.length === 0;
-  const display = value || (disabled ? (slots.length === 0 ? 'Loading…' : 'Select a time') : 'Select a time');
+  const disabled = loading || slots.length === 0;
+  const display = loading ? 'Loading…' : value || 'Select a time';
 
   return (
     <div className="relative" ref={wrapRef}>

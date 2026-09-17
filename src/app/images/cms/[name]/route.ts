@@ -1,3 +1,11 @@
+// ─────────────────────────────────────────────────────────────
+// GET /images/cms/[name] — streams runtime-uploaded images from
+// data/uploads. Files written under public/ at runtime are not
+// served by `next start` (public is snapshotted at build time), so
+// uploads live outside public and are read here instead. Sends
+// X-Content-Type-Options: nosniff so browsers never sniff a
+// different type than the whitelisted one we declare.
+// ─────────────────────────────────────────────────────────────
 import { NextResponse } from 'next/server';
 import { readFile, stat } from 'node:fs/promises';
 import path from 'node:path';
@@ -13,9 +21,6 @@ const TYPE_BY_EXT: Record<string, string> = {
   gif: 'image/gif',
 };
 
-// GET /images/cms/<name> — streams uploads from data/uploads. Files written
-// to public/ at runtime are not served by `next start` (public is snapshotted
-// at build time), so uploads live outside public and are read here instead.
 export const dynamic = 'force-dynamic';
 
 export async function GET(
@@ -42,6 +47,7 @@ export async function GET(
     return new NextResponse(data, {
       headers: {
         'Content-Type': TYPE_BY_EXT[ext] ?? 'application/octet-stream',
+        'X-Content-Type-Options': 'nosniff',
         'Cache-Control': 'public, max-age=31536000, immutable',
       },
     });

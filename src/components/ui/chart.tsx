@@ -1,4 +1,6 @@
 "use client"
+// Chart — Recharts wrapper: ChartContainer injects per-series CSS variables
+// from a ChartConfig, plus themed tooltip/legend helpers. Used by the dashboard.
 
 import * as React from "react"
 import { cn } from "cn"

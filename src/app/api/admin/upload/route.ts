@@ -1,12 +1,19 @@
+// ─────────────────────────────────────────────────────────────
+// POST /api/admin/upload — admin image upload (multipart form,
+// field name "file"). When Cloudinary is configured the image is
+// uploaded there and its CDN URL is returned; otherwise it is saved
+// to data/uploads/<timestamp>-<name> and served by
+// app/images/cms/[name]/route.ts. Protected by middleware
+// (matches /api/admin/*).
+//
+// Only raster image types on the EXT_BY_TYPE whitelist are accepted
+// (no SVG, which would be a stored-XSS vector if served inline).
+// ─────────────────────────────────────────────────────────────
 import { NextResponse } from 'next/server';
 import { mkdir, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { cloudinaryConfigured, cloudinaryUpload } from '@/lib/cloudinary';
 
-// POST /api/admin/upload  (multipart form, field name "file")
-// Saves to data/uploads/<timestamp>-<name> and returns { url }. The file is
-// served at that URL by the GET handler in app/images/cms/[name]/route.ts.
-// Protected by middleware (matches /api/admin/*).
 const UPLOAD_DIR = path.join(process.cwd(), 'data', 'uploads');
 const MAX_BYTES = 25 * 1024 * 1024;
 const EXT_BY_TYPE: Record<string, string> = {
@@ -17,9 +24,6 @@ const EXT_BY_TYPE: Record<string, string> = {
   'image/gif': 'gif',
 };
 
-// POST /api/admin/upload  (multipart form, field name "file")
-// Saves to public/images/cms/<timestamp>-<name> and returns { url }.
-// Protected by middleware (matches /api/admin/*).
 export async function POST(request: Request) {
   let form: FormData;
   try {
@@ -32,8 +36,12 @@ export async function POST(request: Request) {
   if (!(file instanceof File)) {
     return NextResponse.json({ error: 'Missing "file" field' }, { status: 400 });
   }
-  if (!file.type || !file.type.startsWith('image/')) {
-    return NextResponse.json({ error: 'Only image files are allowed' }, { status: 400 });
+  const ext = EXT_BY_TYPE[file.type];
+  if (!ext) {
+    return NextResponse.json(
+      { error: 'Unsupported image type. Use JPEG, PNG, WebP, AVIF or GIF.' },
+      { status: 400 }
+    );
   }
   if (file.size > MAX_BYTES) {
     return NextResponse.json({ error: 'Image must be under 25 MB' }, { status: 413 });
@@ -53,7 +61,6 @@ export async function POST(request: Request) {
     }
   }
 
-  const ext = EXT_BY_TYPE[file.type] ?? (path.extname(file.name).slice(1) || 'bin');
   const safeBase = file.name.replace(/[^a-zA-Z0-9._-]+/g, '-').replace(/\.(webp|png|jpe?g|avif|gif)$/i, '');
   const name = `${Date.now()}-${safeBase || 'image'}.${ext}`;
 

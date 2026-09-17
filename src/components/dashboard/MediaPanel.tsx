@@ -1,4 +1,11 @@
 'use client';
+// ─────────────────────────────────────────────────────────────
+// MediaPanel — Dashboard "Media" tab. Manages every image slot on the
+// public site: named site_images (hero / home sections / service
+// categories / testimonial avatars / branches) plus per-service and
+// per-stylist images and the gallery. Reads /api/content and writes
+// through /api/admin/*; uploads go via ImagePicker → /api/admin/upload.
+// ─────────────────────────────────────────────────────────────
 
 import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';

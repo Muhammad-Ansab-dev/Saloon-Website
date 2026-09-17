@@ -1,4 +1,6 @@
 "use client"
+// DropdownMenu — base-ui menu primitives (trigger/content/item/label/separator)
+// styled for the dashboard account menu.
 
 import * as React from "react"
 import { Menu as MenuPrimitive } from "@base-ui/react/menu"

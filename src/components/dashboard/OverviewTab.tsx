@@ -5,7 +5,7 @@
 // revenue from non-cancelled bookings × service price.
 // ---------------------------------------------------------------------------
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { Euro, CalendarRange, Users, Receipt, Loader2 } from 'lucide-react';
+import { DollarSign, CalendarRange, Users, Receipt, Loader2 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardAction } from '@/components/ui/card';
 import { ChartContainer, ChartTooltipContent, type ChartConfig } from '@/components/ui/chart';
@@ -69,19 +69,23 @@ export function OverviewTab() {
   const [bookings, setBookings] = useState<BookingRow[]>([]);
   const [services, setServices] = useState<ServiceRow[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
 
   const load = useCallback(async () => {
     setLoading(true);
+    setError('');
     try {
       const [bRes, sRes] = await Promise.all([
         fetch('/api/admin/bookings'),
         fetch('/api/admin/services'),
       ]);
+      if (!bRes.ok || !sRes.ok) throw new Error(`HTTP ${bRes.status}/${sRes.status}`);
       const bData = await bRes.json();
       const sData = await sRes.json();
       setBookings(Array.isArray(bData.items) ? bData.items : []);
       setServices(Array.isArray(sData.items) ? sData.items : []);
     } catch {
+      setError('Could not load overview data — are you signed in?');
       setBookings([]); setServices([]);
     } finally {
       setLoading(false);
@@ -157,6 +161,9 @@ export function OverviewTab() {
       <Loader2 className="w-4 h-4 animate-spin" /> Loading overview…
     </div>
   );
+  if (error) return (
+    <div className="py-20 px-6 text-center text-sm text-muted-foreground">{error}</div>
+  );
 
   const selectedTrend = stats.bucketed && stats.bucketed.length
     ? stats.bucketed
@@ -164,10 +171,10 @@ export function OverviewTab() {
 const KPI_ITEMS: {
   label: string;
   value: string;
-  icon: typeof Euro;
+  icon: typeof DollarSign;
   dataKey: 'revenue' | 'bookings' | 'clients' | 'avg';
 }[] = [
-  { label: 'Total Revenue', value: usd(stats.revenue), icon: Euro, dataKey: 'revenue' },
+  { label: 'Total Revenue', value: usd(stats.revenue), icon: DollarSign, dataKey: 'revenue' },
   { label: 'Appointments', value: stats.appointments.toLocaleString('en-US'), icon: CalendarRange, dataKey: 'bookings' },
   { label: 'Active Clients', value: stats.activeClients.toLocaleString('en-US'), icon: Users, dataKey: 'clients' },
   { label: 'Avg. Booking Value', value: usd(stats.avg), icon: Receipt, dataKey: 'avg' },

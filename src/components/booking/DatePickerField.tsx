@@ -16,13 +16,14 @@ interface DatePickerFieldProps {
   onChange: (iso: string) => void;
 }
 
-const YEAR = new Date().getFullYear();
-const MONTH = new Date().getMonth();
-
 export const DatePickerField: React.FC<DatePickerFieldProps> = ({ value, onChange }) => {
   const [open, setOpen] = useState(false);
   const [viewYear, setViewYear] = useState(() => new Date(value + 'T12:00:00').getFullYear());
   const [viewMonth, setViewMonth] = useState(() => new Date(value + 'T12:00:00').getMonth());
+
+  const now = new Date();
+  const currentYear = now.getFullYear();
+  const currentMonth = now.getMonth();
 
   const wrapRef = React.useRef<HTMLDivElement>(null);
 
@@ -59,7 +60,7 @@ export const DatePickerField: React.FC<DatePickerFieldProps> = ({ value, onChang
                 if (viewMonth === 0) { setViewYear(viewYear - 1); setViewMonth(11); }
                 else setViewMonth(viewMonth - 1);
               }}
-              disabled={viewYear === YEAR && viewMonth <= MONTH}
+              disabled={viewYear === currentYear && viewMonth <= currentMonth}
               className="p-1 text-neutral-500 hover:text-black disabled:opacity-30 cursor-pointer"
               aria-label="Previous month"
             >
@@ -74,7 +75,7 @@ export const DatePickerField: React.FC<DatePickerFieldProps> = ({ value, onChang
                 if (viewMonth === 11) { setViewYear(viewYear + 1); setViewMonth(0); }
                 else setViewMonth(viewMonth + 1);
               }}
-              disabled={viewYear === YEAR + 1 && viewMonth >= MONTH}
+              disabled={viewYear === currentYear + 1 && viewMonth >= currentMonth}
               className="p-1 text-neutral-500 hover:text-black disabled:opacity-30 cursor-pointer"
               aria-label="Next month"
             >
@@ -96,9 +97,10 @@ export const DatePickerField: React.FC<DatePickerFieldProps> = ({ value, onChang
             {monthCells(viewYear, viewMonth).map((d) => {
               const iso = toISODate(d);
               const inMonth = d.getMonth() === viewMonth;
-              const past = iso < todayISO;
+              const today = todayISO();
+              const past = iso < today;
               const selected = iso === value;
-              const isToday = iso === todayISO;
+              const isToday = iso === today;
               return (
                 <button
                   key={iso}

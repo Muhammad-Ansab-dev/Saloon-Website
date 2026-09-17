@@ -1,4 +1,5 @@
 "use client"
+// Avatar — base-ui avatar primitive wrapper (image + fallback); shadcn-style UI primitive.
 
 import * as React from "react"
 import { Avatar as AvatarPrimitive } from "@base-ui/react/avatar"

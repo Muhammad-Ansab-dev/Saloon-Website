@@ -6,7 +6,8 @@
 //   generateTimeSlots   → 30-min slot strings for a given weekday
 //   toISODate           Date → "YYYY-MM-DD" (local time)
 //   formatDisplayDate   "YYYY-MM-DD" → "September 15, 2026"
-//   todayISO            today as "YYYY-MM-DD"
+//   todayISO()          today as "YYYY-MM-DD" (evaluated on call, so a
+//                       long-lived server process never freezes the date)
 // ─────────────────────────────────────────────────────────────
 
 /** [open, close) hours per weekday in 24h form. */
@@ -50,5 +51,7 @@ export function formatDisplayDate(iso: string): string {
   });
 }
 
-/** Today's date as "YYYY-MM-DD". */
-export const todayISO = toISODate(new Date());
+/** Today's date as "YYYY-MM-DD" (call it; never cache the result). */
+export function todayISO(): string {
+  return toISODate(new Date());
+}

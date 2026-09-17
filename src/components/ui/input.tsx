@@ -1,3 +1,4 @@
+// Input — styled text input built on the base-ui input primitive; shared UI primitive.
 import * as React from "react"
 import { Input as InputPrimitive } from "@base-ui/react/input"
 import { cn } from "cn"

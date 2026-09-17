@@ -1,7 +1,15 @@
+// ─────────────────────────────────────────────────────────────
+// /api/admin/[col] — admin CRUD for the content store, protected by
+// middleware (matches /api/admin/*). `col` is one of the EDITABLE
+// collections; `bookings` additionally supports create (POST) and
+// status update (PATCH). Full method matrix is documented on POST
+// below.
+// ─────────────────────────────────────────────────────────────
 import { NextResponse } from 'next/server';
 import {
   Booking,
   BookingStatus,
+  ContentCollections,
   ServiceRow,
   StylistRow,
   getCollection,
@@ -379,7 +387,7 @@ export async function PUT(
     return NextResponse.json({ error: 'Body must be { items: [...] }' }, { status: 400 });
   }
 
-  await setCollection(col, body.items as never);
+  await setCollection(col, body.items as ContentCollections[Editable]);
   const updated = await getCollection(col);
   return NextResponse.json({ ok: true, items: updated });
 }

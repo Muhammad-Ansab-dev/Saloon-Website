@@ -1,9 +1,9 @@
 'use client';
 // ---------------------------------------------------------------------------
-// StylistsPanel — the Dashboard's "Stylists" tab, styled with the same recipe
-// as BookingInbox so it reads as native dashboard content: white summary
-// cards, uppercase title row with a black action button, and a white bordered
-// roster table that scrolls internally (flex-1 min-h-0 + h-full overflow).
+// StylistsPanel — the Dashboard's "Stylists" tab, styled to read as native
+// dashboard content: white summary cards, uppercase title row with a black
+// action button, and a white bordered roster table that scrolls internally
+// (flex-1 min-h-0 + h-full overflow).
 // FULL CRUD against the PostgreSQL store:
 //   - Create: "Add stylist" opens a modal → POST /api/admin/stylists
 //   - Read:   loads live rows from /api/content (DB only — no static fallback)

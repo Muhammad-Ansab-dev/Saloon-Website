@@ -23,7 +23,7 @@ export const ServiceMenu: React.FC<ServiceMenuProps> = ({ onSelectService }) => 
     [services]
   );
   const [activeCategory, setActiveCategory] = useState<string>('All');
-  const [activeServiceId, setActiveServiceId] = useState<string>(services[0].id);
+  const [activeServiceId, setActiveServiceId] = useState<string>(services[0]?.id ?? '');
   const listRef = useRef<HTMLDivElement>(null);
 
   const visibleServices = useMemo(
@@ -36,7 +36,7 @@ export const ServiceMenu: React.FC<ServiceMenuProps> = ({ onSelectService }) => 
 
   useEffect(() => {
     if (!visibleServices.some((service) => service.id === activeServiceId)) {
-      setActiveServiceId(visibleServices[0]?.id ?? services[0].id);
+      setActiveServiceId(visibleServices[0]?.id ?? services[0]?.id ?? '');
     }
   }, [visibleServices, activeServiceId, services]);
 

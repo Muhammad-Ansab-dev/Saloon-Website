@@ -1,8 +1,9 @@
 // ─────────────────────────────────────────────────────────────
 // types.ts — shared TypeScript interfaces for the whole site.
-// Mirrors the shapes of the static data in data/salonData.ts and
-// data/galleryData.ts: products/cart, services, press, testimonials,
-// lookbook, locations and the appointment-booking payload.
+// Mirrors the shapes of the static data in data/salonData.ts:
+// products + cart items, services, testimonials and studio
+// locations. (Gallery types live alongside their data in
+// data/galleryData.ts.)
 // ─────────────────────────────────────────────────────────────
 export interface Product {
   id: string;
@@ -35,36 +36,12 @@ export interface ServiceItem {
   category: string;
 }
 
-export interface PressArticle {
-  id: string;
-  dateBadge: {
-    month: string;
-    day: string;
-  };
-  author: string;
-  category: string;
-  title: string;
-  excerpt: string;
-  content: string;
-  image: string;
-  readTime: string;
-}
-
 export interface Testimonial {
   id: string;
   quote: string;
   author: string;
   role: string;
   location?: string;
-}
-
-export interface LookbookItem {
-  id: string;
-  title: string;
-  model: string;
-  style: string;
-  image: string;
-  alt: string;
 }
 
 export interface LocationBranch {
@@ -74,16 +51,4 @@ export interface LocationBranch {
   telephone: string;
   coordinates?: string;
   hours: string;
-}
-
-export interface AppointmentBooking {
-  serviceId: string;
-  serviceName: string;
-  date: string;
-  timeSlot: string;
-  clientName: string;
-  clientEmail: string;
-  clientPhone: string;
-  stylistName: string;
-  notes?: string;
 }

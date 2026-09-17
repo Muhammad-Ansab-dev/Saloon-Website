@@ -1,4 +1,12 @@
 'use client';
+// ─────────────────────────────────────────────────────────────
+// Route: /dashboard — the admin console. Protected by middleware
+// (unauthenticated visitors are redirected to /dashboard/login).
+// A fixed left rail switches between five tabs: Overview, Bookings,
+// Services, Stylists and Media — each rendered by its own component
+// in components/dashboard/. Site chrome (Header/Footer/FloatingWidget)
+// is intentionally suppressed by Providers on this route.
+// ─────────────────────────────────────────────────────────────
 
 import React, { useState } from 'react';
 import Link from 'next/link';

@@ -1,35 +1,45 @@
 # AGENTS.md — Guidance for AI agents working in this repo
 
 ## Project at a glance
-Next.js 15 (App Router) + React 19 + TypeScript + Tailwind Cache v4 + motion (framer-motion). A luxury hair salon marketing site for Paul Hair Studio: homepage, services menu, gallery, about, contact, booking modal, product cart.
+Next.js 15 (App Router) + React 19 + TypeScript + Tailwind CSS v4 + motion (framer-motion). A luxury hair salon marketing site for Paul Hair Studio: homepage, services menu, gallery, about, contact, booking modal, product cart, and a password-protected admin dashboard backed by PostgreSQL.
 
 ## Commands
 - Dev server: `pnpm dev` → **http://localhost:3010**
-- Type-check only: `pnpm lint` (runs `tsc --noEmit`)
+- Type-check only: `pnpm lint` (runs `tsc --noEmit`, strict)
 - Production build: `pnpm build`
 - Serve build: `pnpm start` (also :3010)
+- Inspect the DB: `psql "postgres://salon:salon_dev_2026@localhost:5432/salon"`
 
 ## Workflow / practical rules
 - **VERIFY with the dev server:** after edits, wait a few seconds and `curl -s http://localhost:3010/<route>` and grep for the expected markup. The HMR host is at :3010 (a separate Vite build exists on :3000 for a legacy project — do not touch it).
 - **Do NOT delete or `rm -rf .next` while `next dev` is running.** A production `pnpm build` writes over `.next` and will break the running dev session (stale chunks → 500 / 404). If a build runs, the dev server must be restarted.
-- **Do NOT kill the user's dev process** (`pkill -f next` etc.) — the dev server runs in the user's terminal (`pts/0`).
+- **Do NOT kill the user's dev process** (`pkill -f next` etc.) — the dev server runs in the user's terminal (`pts/0`), except under the standing permission below.
+- **Never print secrets** from `.env.local` (`DATABASE_URL` credentials, `ADMIN_*`, `CLOUDINARY_*`).
+- **Never commit** unless the user explicitly asks.
+
+## Environment
+See `.env.example`. `.env*` is git-ignored except `.env.example`.
+- `DATABASE_URL` — required in production; dev falls back to the local `salon` DB.
+- `ADMIN_USERNAME` / `ADMIN_PASSWORD` / `ADMIN_SECRET` — required in production. Dev fallbacks: `admin` / `paul123` / `dev-secret-change-me`. In production the auth layer fails closed when these are unset.
+- `CLOUDINARY_CLOUD_NAME` / `CLOUDINARY_API_KEY` / `CLOUDINARY_API_SECRET` (+ `CLOUDINARY_FOLDER`) — optional; when set, uploads go to Cloudinary, otherwise to `data/uploads/` served by `src/app/images/cms/[name]/route.ts`.
 
 ## Architecture notes
-- **State:** global React context lives in `src/components/layout/Providers.tsx` (cart items, cart-open, booking modal state, pre-selected service, product modal). Exports `useSite()` with `onBookNow`, `onSelectServiceForBooking`, `onOpenCart`, `onOpenProduct`, `onAddToCart`.
-- **Shell:** `src/app/layout.tsx` mounts `<Providers>` once → Header, Footer, FloatingWidget, CartDrawer, BookingModal, ProductModal are rendered there for every route.
+- **State:** global React context lives in `src/components/layout/Providers.tsx` (cart items, cart-open, booking modal state, pre-selected service, product modal) and is exposed via `useSite()` (`onBookNow`, `onSelectServiceForBooking`, `onOpenCart`, `onOpenProduct`, `onAddToCart`). Providers also hides all site chrome on `/dashboard` and resolves `/?scrollTo=<sectionId>` deep links.
+- **Shell:** `src/app/layout.tsx` mounts `<Providers>` once → Header, Footer, FloatingWidget, CartDrawer, BookingModal, ProductModal are rendered there for every route (suppressed on `/dashboard`).
 - **Folder layout:** `src/components/` is organised by responsibility:
   - `layout/` — chrome that ships on every route (Providers, Header, Footer, FloatingWidget)
-  - `views/` — route-level compositions (HomePage, ServicesPage, GalleryPage) —
-    NOTE: named `views/`, not `pages/`, because `src/pages` is reserved by Next.js for the legacy Pages Router
+  - `views/` — route-level compositions (HomePage, ServicesPage, GalleryPage, AboutPage) —
+    NOTE: named `views/`, not `pages`, because `src/pages` is reserved by Next.js for the legacy Pages Router
   - `sections/<page>/` — sections grouped by the page they belong to (`home/`, `services/`, `about/`, `contact/`)
-  - `booking/` — the shared booking flow (BookingModal, BookingForm, DatePickerField)
+  - `booking/` — the shared booking flow (BookingModal, BookingForm, DatePickerField, TimeSlotDropdown)
   - `cart/` — CartDrawer, ProductModal, ProductBottleVisual
-  - `ui/` — shared primitives (ScrollReveal)
-- **Data:** everything static lives in `src/data/salonData.ts` (products, press, testimonials, services + media, stylists, locations) and `src/data/galleryData.ts`. Editing copy = editing these arrays. Types mirror it in `types.ts`.
-- **Admin/store:** `src/lib/store.ts` is the PostgreSQL content store (schema + one-time seed + serialised transactions). Public data endpoints: `/api/content` (site data), `/api/availability` (taken slots), `/api/booking` (submit). Protected admin endpoints: `/api/admin/[col]` (GET/PUT/PATCH/DELETE).
-- **Booking (shared):** `src/components/booking/` owns the whole booking flow — `BookingModal` (overlay chrome + confetti), `BookingForm` (single reusable form used by both the modal and `/contact`), `DatePickerField` (custom calendar that opens downward). Salon hours + slot helpers are centralized in `src/lib/bookingTime.ts` so all surfaces stay identical.
+  - `dashboard/` — admin console tabs (OverviewTab, BookingTab, ServicesPanel, StylistsPanel, MediaPanel, ImagePicker, DateField, AddBookingModal)
+  - `ui/` — shared primitives (ScrollReveal/SpringReveal/Parallax) plus shadcn-style controls (button, card, badge, avatar, input, separator, tabs, dropdown-menu, chart)
+- **Data:** static defaults live in `src/data/salonData.ts` (products, testimonials, services + media, stylists, locations, image-CMS maps) and `src/data/galleryData.ts` (categories, gallery items, editorial films + posters). Editing copy = editing these arrays. Types mirror it in `types.ts`.
+- **Store (PostgreSQL):** `src/lib/store.ts` owns the schema, one-time seed from the static defaults, and serialised transactions. Collections: `services`, `stylists`, `gallery`, `site_images`, `categories`, `bookings`. Public endpoints: `/api/content`, `/api/availability`, `/api/booking`. Admin endpoints: `/api/admin/[col]` (GET/PUT/POST/PATCH/DELETE), `/api/admin/upload`, `/api/auth/login`.
+- **Auth:** `src/lib/auth.ts` issues an HMAC-signed `httpOnly` session cookie (`ph_admin_session`, 12h). `src/middleware.ts` protects `/dashboard` (redirect) and `/api/admin/*` (401). Login is rate-limited and compares credentials in constant time.
 - **Hooks:** `src/hooks/useSiteContent.ts` mirrors admin collections into the public site via `/api/content`, with static fallbacks.
-- **Animation primitives:** `src/components/ui/ScrollReveal.tsx` exports `ScrollReveal` (scrub), `SpringReveal` (whileInView spring), `Parallax`. Prefer these over hand-rolled animation code. Section-specific CSS is scoped under `src/experience/` (e.g. `heroSlider`, `serviceMenu`, `svcDetail`).
+- **Animation primitives:** `src/components/ui/ScrollReveal.tsx` exports `ScrollReveal` (scrub), `SpringReveal` (whileInView spring), `Parallax`. Prefer these over hand-rolled animation code. Section-specific CSS is scoped under `src/experience/`.
 
 ## Routing specifics
 
@@ -40,17 +50,32 @@ Next.js 15 (App Router) + React 19 + TypeScript + Tailwind Cache v4 + motion (fr
    - else if it matches a service **id** (`srv-N`) → `ServiceDetailPage`
    - else → inline "page not found"
    - Category slugs are generated by `categorySlug()` in `ServicesCategories.tsx` (lowercase, non-alphanumeric → `-`). Service categories are derived from `src/data/salonData.ts`.
+   - Both services routes wrap `getCollection` in try/catch and fall back to the static `SERVICES`.
 3. Booking: any "Book now" button calls `onSelectServiceForBooking(service)` → opens `BookingModal` with that service pre-selected. The `/contact` page renders the same form inline as a card.
 
 ### Homepage section order
 `src/views/HomePage.tsx`: Hero → PartnerBar → About → ServiceMenu → LookbookTrio → TeamSection → TestimonialGrid → VisitUs → NewsletterSubscribe.
+
+### About page section order
+`src/views/AboutPage.tsx` composes `src/sections/about/`: AboutHero → AboutStats → AboutStory → AboutFounder → AboutValues → AboutTeam → AboutTimeline → AboutCta. Each section is self-contained; editing one only touches its own file. The `/about` route entry is a thin server component that renders the view.
+
+### Dashboard (`/dashboard`)
+Protected by middleware. Left rail switches five tabs: Overview, Bookings, Services, Stylists, Media.
+- **BookingTab** sub-views: `Analytics | All Bookings | Today Bookings`. The period tabs (Total/Daily/Weekly/Monthly/Yearly) render only in Analytics. Period semantics: total = all time; daily = last 30 days; weekly = last 8 weeks (Mondays); monthly = this year to date; yearly = current calendar year. The list view has search + date presets + custom single date + pagination, and an **Add Booking** modal (POST `/api/admin/bookings`).
 
 ## Styling conventions
 - Headings: `font-editorial` (Syne, `font-black uppercase tracking-tight`).
 - Script: `font-script`; luxury serif: `font-serif-luxury`.
 - Brand pinks: `--color-blush*` tokens (`#fce8ee` family) in `src/app/globals.css`.
 - Content page background: `bg-[#f7f5ee]`.
-- Do NOT add comments in code unless asked; the codebase now has generous header comments per file — keep them accurate when renaming or repurposing a component.
+- The codebase has generous header comments per file — keep them accurate when renaming or repurposing a component. Do not add inline comments beyond that unless asked.
+
+## Security posture (keep intact)
+- `src/lib/auth.ts` fails closed in production and compares credentials and signatures in constant time; cookie is `Secure` in production.
+- `/api/auth/login` is rate-limited (8 attempts/min/IP).
+- `/api/admin/upload` accepts only a whitelist of raster image types (no SVG).
+- `src/app/images/cms/[name]/route.ts` sends `X-Content-Type-Options: nosniff`.
+- `next.config.ts` sets baseline security headers and `poweredByHeader: false`.
 
 - **Dev-server lifecycle (standing permission, granted by the user):** I may
   kill/restart the running `pnpm dev` server (port 3010) whenever a middleware
@@ -66,3 +91,5 @@ Next.js 15 (App Router) + React 19 + TypeScript + Tailwind Cache v4 + motion (fr
 - **Testimonials:** the homepage uses `TestimonialGrid` (3D coverflow).
 - **Hero:** `Hero` (`src/sections/home/Hero.tsx`) is active (other hero/stylist/shop/gallery experiment components were removed; `src/experience/` CSS was pruned to match).
 - **Booking consistency:** the modal and `/contact` booking card must stay one widget — edit `src/components/booking/BookingForm.tsx` rather than forking the markup.
+- **Dates:** always call `todayISO()` from `src/lib/bookingTime.ts`; never cache it at module scope (a long-lived server would freeze the date).
+- **Admin endpoint naming:** `/api/admin/bookings` is served by the `[col]` catch-all route, not a dedicated folder.

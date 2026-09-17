@@ -1,3 +1,4 @@
+// Badge — small status/label pill with CVA variants; shared UI primitive.
 import { mergeProps } from "@base-ui/react/merge-props"
 import { useRender } from "@base-ui/react/use-render"
 import { cva, type VariantProps } from "class-variance-authority"
