@@ -10,8 +10,10 @@ import React from 'react';
 import { LOCATIONS } from '@/data/salonData';
 import { ExternalLink } from 'lucide-react';
 import { ScrollReveal, SpringReveal, Parallax } from '../../components/ui/ScrollReveal';
+import { useSiteContent } from '@/hooks/useSiteContent';
 
 export const VisitUs: React.FC = () => {
+  const { images } = useSiteContent();
   return (
     <section id="visit" className="relative bg-[#f2f0eb] py-20 sm:py-28 overflow-hidden">
       {/* Background Giant Watermark Script Text */}
@@ -96,7 +98,7 @@ export const VisitUs: React.FC = () => {
             >
               <Parallax amount={24}>
                 <img
-                  src="/images/visitus.webp"
+                  src={images.visitUs ?? 'https://res.cloudinary.com/dittrfbja/image/upload/v1789650838/hair-salon/visitus.webp'}
                   alt="Client receiving luxury hair treatment at salon wash basin"
                   className="w-full h-[380px] sm:h-[460px] object-cover object-center group-hover:scale-105 transition-transform duration-700"
                   loading="lazy"

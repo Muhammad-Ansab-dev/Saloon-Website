@@ -62,8 +62,8 @@ export const Providers: React.FC<{ children: React.ReactNode }> = ({
 
   React.useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'auto' });
-    // Close all overlays when entering the admin area so site modals don't bleed through.
-    if (pathname.startsWith('/admin')) {
+    // Close all overlays when entering the dashboard area so site modals don't bleed through.
+    if (pathname.startsWith('/dashboard')) {
       setIsBookingOpen(false);
       setIsCartOpen(false);
       setSelectedProduct(null);
@@ -134,7 +134,7 @@ export const Providers: React.FC<{ children: React.ReactNode }> = ({
       }}
     >
       <div className="min-h-screen bg-white text-black flex flex-col selection:bg-black selection:text-white font-sans antialiased">
-        {!pathname.startsWith('/admin') && (
+        {!pathname.startsWith('/admin') && !pathname.startsWith('/dashboard') && (
           <Header
             cartCount={totalCartCount}
             onOpenCart={() => setIsCartOpen(true)}
@@ -145,11 +145,11 @@ export const Providers: React.FC<{ children: React.ReactNode }> = ({
 
         <main className="flex-1">{children}</main>
 
-        {!pathname.startsWith('/admin') && (
+        {!pathname.startsWith('/admin') && !pathname.startsWith('/dashboard') && (
           <Footer onScrollToTop={handleScrollToTop} />
         )}
 
-        {!pathname.startsWith('/admin') && (
+        {!pathname.startsWith('/admin') && !pathname.startsWith('/dashboard') && (
           <FloatingWidget
             cartCount={totalCartCount}
             onOpenCart={() => setIsCartOpen(true)}

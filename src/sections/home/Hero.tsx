@@ -6,6 +6,7 @@
 
 import React, { useEffect, useState } from 'react';
 import '../../experience/heroSlider.css';
+import { useSiteContent } from '@/hooks/useSiteContent';
 
 const BOXES = [
   {
@@ -13,32 +14,33 @@ const BOXES = [
     title: 'Rejuvenate Your Body & Mind',
     description:
       'Step into a warm, welcoming space designed to help you unwind, recharge, and leave feeling brand new.',
-    image: '/images/hero-1.webp',
+    image: 'https://res.cloudinary.com/dittrfbja/image/upload/v1789650822/hair-salon/hero-1.webp',
   },
   {
     accent: 'Fresh & Floral',
     title: 'Blossom Into Your Best Self',
     description:
       'Fresh floral tones and soft textures that bring out your natural radiance, season after season.',
-    image: '/images/hair-hero2.webp',
+    image: 'https://res.cloudinary.com/dittrfbja/image/upload/v1789651073/hair-salon/hair-hero2.webp',
   },
   {
     accent: 'Bold & Bright',
     title: 'Stand Out With Style',
     description:
       'Confident, statement looks crafted by our stylists — so every entrance feels like your moment.',
-    image: '/images/hair-hero3.webp',
+    image: 'https://res.cloudinary.com/dittrfbja/image/upload/v1789650820/hair-salon/hair-hero3.webp',
   },
   {
     accent: 'Soft & Serene',
     title: 'Where Calm Meets Beauty',
     description:
       'A serene escape where gentle care meets expert artistry, giving you calm and beauty in one visit.',
-    image: '/images/lookbook-3.webp',
+    image: 'https://res.cloudinary.com/dittrfbja/image/upload/v1789650832/hair-salon/lookbook-3.webp',
   },
 ];
 
 export const Hero: React.FC = () => {
+  const { images } = useSiteContent();
   const [loaded, setLoaded] = useState(false);
   const [activeIndex, setActiveIndex] = useState(0);
 
@@ -54,7 +56,7 @@ export const Hero: React.FC = () => {
           <div
             key={box.accent}
             className={`vfx-hero-background${index === activeIndex ? ' active' : ''}`}
-            style={{ backgroundImage: `url(${box.image})` }}
+            style={{ backgroundImage: `url(${images[`hero.${index + 1}`] ?? box.image})` }}
           />
         ))}
       </div>

@@ -41,7 +41,7 @@ export const ServiceDetailPage: React.FC<ServiceDetailPageProps> = ({
     );
   }
 
-  const image = SERVICE_MEDIA[service.id]?.image ?? '/images/hero-1.webp';
+  const image = service.image || (SERVICE_MEDIA[service.id]?.image ?? 'https://res.cloudinary.com/dittrfbja/image/upload/v1789650822/hair-salon/hero-1.webp');
   const alt = SERVICE_MEDIA[service.id]?.alt ?? service.name;
 
   return (
@@ -86,7 +86,7 @@ export const ServiceDetailPage: React.FC<ServiceDetailPageProps> = ({
           transition={{ duration: 0.6, delay: 0.36 }}
           className="svc-meta"
         >
-          <span className="svc-price">CHF {service.price}</span>
+          <span className="svc-price">USD {service.price}</span>
           <span className="svc-duration">{service.durationMinutes} min</span>
         </motion.div>
         <motion.div {...fadeUp} transition={{ duration: 0.6, delay: 0.46 }}>

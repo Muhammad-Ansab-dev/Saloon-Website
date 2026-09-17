@@ -54,11 +54,11 @@ export const ServicesByCategory: React.FC<ServicesByCategoryProps> = ({
         <div className="max-w-6xl mx-auto grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-7">
           {services.map((service) => {
             const media = SERVICE_MEDIA[service.id];
-            const image = media?.image ?? '/images/hero-1.webp';
+            const image = service.image || (media?.image ?? 'https://res.cloudinary.com/dittrfbja/image/upload/v1789650822/hair-salon/hero-1.webp');
             return (
               <article
                 key={service.id}
-                className="group h-full flex flex-col bg-white border border-neutral-200 hover:bg-black hover:border-black transition-colors duration-300 overflow-hidden"
+                className="group h-full flex flex-col bg-white border border-neutral-200 hover:bg-white hover:border-black transition-colors duration-300 overflow-hidden"
               >
                 <Link href={`/services/${service.id}`} className="flex-1 flex flex-col">
                   <div className="relative aspect-[4/3] overflow-hidden">
@@ -73,18 +73,18 @@ export const ServicesByCategory: React.FC<ServicesByCategoryProps> = ({
                     </span>
                   </div>
                   <div className="flex-1 p-6 sm:p-8 flex flex-col gap-3">
-                    <h3 className="font-editorial text-base sm:text-lg font-black uppercase tracking-wide text-black group-hover:text-white transition-colors">
+                    <h3 className="font-editorial text-base sm:text-lg font-black uppercase tracking-wide text-black transition-colors">
                       {service.name}
                     </h3>
-                    <p className="text-sm text-neutral-600 group-hover:text-white/70 leading-relaxed transition-colors line-clamp-2">
+                    <p className="text-sm text-neutral-600 leading-relaxed transition-colors line-clamp-2">
                       {service.description}
                     </p>
-                    <div className="flex items-center justify-between mt-2 pt-4 border-t border-neutral-200 group-hover:border-white/20 transition-colors">
-                      <span className="text-[11px] uppercase tracking-[0.2em] text-neutral-500 group-hover:text-white/60">
+                    <div className="flex items-center justify-between mt-2 pt-4 border-t border-neutral-200 transition-colors">
+                      <span className="text-[11px] uppercase tracking-[0.2em] text-neutral-500">
                         {service.durationMinutes} min
                       </span>
-                      <span className="font-bold text-black group-hover:text-white text-sm">
-                        CHF {service.price}
+                      <span className="font-bold text-black text-sm">
+                        USD {service.price}
                       </span>
                     </div>
                   </div>
@@ -93,7 +93,7 @@ export const ServicesByCategory: React.FC<ServicesByCategoryProps> = ({
                   <button
                     type="button"
                     onClick={() => onSelectService(service)}
-                    className="group/btn w-full inline-flex items-center justify-center gap-2 bg-black text-white text-xs font-bold tracking-[0.2em] uppercase px-6 py-3.5 hover:bg-black group-hover:bg-white group-hover:text-black transition-colors cursor-pointer"
+                    className="group/btn w-full inline-flex items-center justify-center gap-2 bg-black text-white text-xs font-bold tracking-[0.2em] uppercase px-6 py-3.5 hover:bg-black transition-colors cursor-pointer"
                   >
                     Book now
                     <ArrowRight className="w-4 h-4 transition-transform group-hover/btn:translate-x-1" />

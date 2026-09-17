@@ -18,8 +18,9 @@ import {
 } from 'lucide-react';
 import { motion } from 'motion/react';
 import { BookingForm } from '../../components/booking/BookingForm';
+import { useSiteContent } from '@/hooks/useSiteContent';
 
-const BRANCH_IMAGES = ['/images/visitus.webp', '/images/servicemenu.webp'];
+const BRANCH_IMAGES = ['https://res.cloudinary.com/dittrfbja/image/upload/v1789650838/hair-salon/visitus.webp', 'https://res.cloudinary.com/dittrfbja/image/upload/v1789650836/hair-salon/servicemenu.webp'];
 
 const FADE = {
   initial: { opacity: 0, y: 24 },
@@ -29,6 +30,7 @@ const FADE = {
 };
 
 export const ContactPage: React.FC = () => {
+  const { images } = useSiteContent();
   const [form, setForm] = useState({ name: '', email: '', subject: '', message: '' });
   const [submitted, setSubmitted] = useState(false);
   // Remounts BookingForm after a completed booking so a new one can be made.
@@ -116,7 +118,7 @@ export const ContactPage: React.FC = () => {
               </div>
               <div className="relative min-h-[240px] sm:min-h-full">
                 <img
-                  src={BRANCH_IMAGES[idx] ?? BRANCH_IMAGES[0]}
+                  src={images[`branch.${idx === 0 ? 'zurich' : 'paris'}`] ?? BRANCH_IMAGES[idx] ?? BRANCH_IMAGES[0]}
                   alt={`${loc.city} studio`}
                   loading="lazy"
                   className="absolute inset-0 w-full h-full object-cover"

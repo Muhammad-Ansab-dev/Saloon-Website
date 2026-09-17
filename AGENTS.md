@@ -52,6 +52,14 @@ Next.js 15 (App Router) + React 19 + TypeScript + Tailwind Cache v4 + motion (fr
 - Content page background: `bg-[#f7f5ee]`.
 - Do NOT add comments in code unless asked; the codebase now has generous header comments per file — keep them accurate when renaming or repurposing a component.
 
+- **Dev-server lifecycle (standing permission, granted by the user):** I may
+  kill/restart the running `pnpm dev` server (port 3010) whenever a middleware
+  matcher change, `next.config.ts` change, or stale-client-chunk fix requires a
+  restart — the user explicitly authorized this. Prefer targeted restarts over
+  `pnpm build` (never build over a live dev session: it stomps `.next` and 500s
+  routes). If I restart it, the user must be told it happened and that they
+  should reload the browser tab.
+
 ## Gotchas / lessons learned (from this project's history)
 - **stale-canvas pitfall:** both a Vite (`/home/arch/Projects/Hair-Salon-Website`) and this Next.js project exist. Edits must go into this directory; the Vite repo is used by nothing live now.
 - **Vercel 404 build:** previously failed with "No Output Directory named dist" — fixed by `vercel.json` (`buildCommand: pnpm build`, `outputDirectory: .next`).

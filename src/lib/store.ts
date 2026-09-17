@@ -7,23 +7,30 @@
 //
 // Tables:
 //   services(id, name, description, price, duration_minutes,
-//            category, sort_order)
-//   stylists(id, name, role, sort_order)
+//            category, image, sort_order)
+//   stylists(id, name, role, image, sort_order)
 //   gallery(id, image, alt, caption, category, sort_order)
+//   site_images(image_key, image_url)
+//   categories(name, stylists)
 //   bookings(id, service_id, service_name, stylist_name, date,
 //            time, client_name, client_email, client_phone,
-//            status, created_at)
-//
+//            status, created_at)//
 // Schema is created idempotently on first use, then seeded once
 // from the TS defaults in data/salonData.ts / galleryData.ts.
 // Collections are replaced wholesale on save (DELETE + INSERT in a
 // transaction) so admin "Save" semantics stay identical to before.
 // Bookings: created as `confirmed` by /api/booking; status changes go
 // through a targeted UPDATE (updateBooking), not a full rewrite.
-//   collections: services, stylists, gallery, bookings, brands
+//   collections: services, stylists, gallery, bookings, siteImages, categories
 // ─────────────────────────────────────────────────────────────
 import { Pool } from 'pg';
-import { SERVICES, STYLISTS } from '../data/salonData';
+import {
+  SERVICES,
+  STYLISTS,
+  SERVICE_IMAGE_BY_ID,
+  STYLIST_IMAGE_BY_ID,
+  SITE_IMAGES_DEFAULTS,
+} from '../data/salonData';
 import { GALLERY_ITEMS } from '../data/galleryData';
 
 export type BookingStatus = 'pending' | 'confirmed' | 'completed' | 'cancelled';
@@ -50,20 +57,25 @@ export type ServiceRow = {
   price: number;
   durationMinutes: number;
   category: string;
+  image: string;
 };
-export type StylistRow = { id: string; name: string; role: string };
+export type StylistRow = { id: string; name: string; role: string; image: string };
 export type GalleryRow = {
   image: string;
   alt: string;
   caption: string;
   category: string;
 };
+export type SiteImageRow = { key: string; value: string };
+export type CategoryRow = { name: string; stylists: string[] };
 
 export type ContentCollections = {
   services: ServiceRow[];
   stylists: StylistRow[];
   gallery: GalleryRow[];
   bookings: Booking[];
+  siteImages: SiteImageRow[];
+  categories: CategoryRow[];
 };
 
 const DEFAULTS = {
@@ -71,6 +83,8 @@ const DEFAULTS = {
   stylists: STYLISTS,
   gallery: GALLERY_ITEMS,
   bookings: [],
+  siteImages: Object.entries(SITE_IMAGES_DEFAULTS).map(([key, value]) => ({ key, value })),
+  categories: [...new Set(SERVICES.map((s) => s.category).filter(Boolean))].map((name) => ({ name, stylists: [] })),
 } as const;
 
 // ── Pool (shared across route bundles via globalThis — a module-level
@@ -99,6 +113,8 @@ const TABLE_BY_COLLECTION: Record<
   stylists: 'stylists',
   gallery: 'gallery',
   bookings: 'bookings',
+  siteImages: 'site_images',
+  categories: 'categories',
 };
 
 // ── Schema + one-time seed ──
@@ -110,12 +126,14 @@ CREATE TABLE IF NOT EXISTS services (
   price INTEGER NOT NULL DEFAULT 0,
   duration_minutes INTEGER NOT NULL DEFAULT 0,
   category TEXT NOT NULL DEFAULT '',
+  image TEXT NOT NULL DEFAULT '',
   sort_order INTEGER NOT NULL DEFAULT 0
 );
 CREATE TABLE IF NOT EXISTS stylists (
   id TEXT PRIMARY KEY,
   name TEXT NOT NULL DEFAULT '',
   role TEXT NOT NULL DEFAULT '',
+  image TEXT NOT NULL DEFAULT '',
   sort_order INTEGER NOT NULL DEFAULT 0
 );
 CREATE TABLE IF NOT EXISTS gallery (
@@ -125,6 +143,14 @@ CREATE TABLE IF NOT EXISTS gallery (
   caption TEXT NOT NULL DEFAULT '',
   category TEXT NOT NULL DEFAULT '',
   sort_order INTEGER NOT NULL DEFAULT 0
+);
+CREATE TABLE IF NOT EXISTS site_images (
+  image_key TEXT PRIMARY KEY,
+  image_url TEXT NOT NULL DEFAULT ''
+);
+CREATE TABLE IF NOT EXISTS categories (
+  name TEXT PRIMARY KEY,
+  stylists TEXT NOT NULL DEFAULT '[]'
 );
 CREATE TABLE IF NOT EXISTS bookings (
   id TEXT PRIMARY KEY,
@@ -154,6 +180,48 @@ async function ensureSchema(): Promise<void> {
       await pool.query(
         `ALTER TABLE bookings ADD COLUMN IF NOT EXISTS status TEXT NOT NULL DEFAULT 'confirmed'`
       );
+      await pool.query(
+        `ALTER TABLE services ADD COLUMN IF NOT EXISTS image TEXT NOT NULL DEFAULT ''`
+      );
+      await pool.query(
+        `ALTER TABLE stylists ADD COLUMN IF NOT EXISTS image TEXT NOT NULL DEFAULT ''`
+      );
+      // Seed the named image slots + backfill empty image columns from the
+      // static defaults — idempotent, never clobbers an admin override.
+      for (const [key, value] of Object.entries(SITE_IMAGES_DEFAULTS)) {
+        await pool.query(
+          `INSERT INTO site_images (image_key, image_url) VALUES ($1,$2)
+           ON CONFLICT (image_key) DO NOTHING`,
+          [key, value]
+        );
+      }
+      for (const [id, image] of Object.entries(SERVICE_IMAGE_BY_ID)) {
+        await pool.query(
+          `UPDATE services SET image = $2 WHERE id = $1 AND image = ''`,
+          [id, image]
+        );
+      }
+      for (const [id, image] of Object.entries(STYLIST_IMAGE_BY_ID)) {
+        await pool.query(
+          `UPDATE stylists SET image = $2 WHERE id = $1 AND image = ''`,
+          [id, image]
+        );
+      }
+      await pool.query(
+        `ALTER TABLE categories ADD COLUMN IF NOT EXISTS stylists TEXT NOT NULL DEFAULT '[]'`
+      );
+      // Seed categories from the services menu if the table is empty
+      // (covers pre-existing DBs that predate the categories collection).
+      const { rows: catRows } = await pool.query('SELECT COUNT(*)::int AS n FROM categories');
+      if (catRows[0].n === 0) {
+        const { rows: menu } = await pool.query('SELECT DISTINCT category FROM services WHERE category <> \'\'');
+        for (const r of menu) {
+          await pool.query(
+            `INSERT INTO categories (name, stylists) VALUES ($1, '[]') ON CONFLICT (name) DO NOTHING`,
+            [r.category]
+          );
+        }
+      }
       const { rows } = await pool.query(
         'SELECT COUNT(*)::int AS n FROM services'
       );
@@ -175,16 +243,16 @@ async function seedFromDefaults(): Promise<void> {
       const s = DEFAULTS.services[i];
       await cx.query(
         `INSERT INTO services
-           (id, name, description, price, duration_minutes, category, sort_order)
-         VALUES ($1,$2,$3,$4,$5,$6,$7)`,
-        [s.id, s.name, s.description, s.price, s.durationMinutes, s.category, i]
+           (id, name, description, price, duration_minutes, category, image, sort_order)
+         VALUES ($1,$2,$3,$4,$5,$6,$7,$8)`,
+        [s.id, s.name, s.description, s.price, s.durationMinutes, s.category, SERVICE_IMAGE_BY_ID[s.id] ?? '', i]
       );
     }
     for (let i = 0; i < DEFAULTS.stylists.length; i++) {
       const st = DEFAULTS.stylists[i];
       await cx.query(
-        `INSERT INTO stylists (id, name, role, sort_order) VALUES ($1,$2,$3,$4)`,
-        [st.id, st.name, st.role, i]
+        `INSERT INTO stylists (id, name, role, image, sort_order) VALUES ($1,$2,$3,$4,$5)`,
+        [st.id, st.name, st.role, STYLIST_IMAGE_BY_ID[st.id] ?? '', i]
       );
     }
     for (let i = 0; i < DEFAULTS.gallery.length; i++) {
@@ -212,6 +280,7 @@ function mapService(row: Record<string, unknown>): ServiceRow {
     price: Number(row.price ?? 0),
     durationMinutes: Number(row.duration_minutes ?? 0),
     category: String(row.category ?? ''),
+    image: String(row.image ?? ''),
   };
 }
 
@@ -220,6 +289,7 @@ function mapStylist(row: Record<string, unknown>): StylistRow {
     id: String(row.id),
     name: String(row.name ?? ''),
     role: String(row.role ?? ''),
+    image: String(row.image ?? ''),
   };
 }
 
@@ -230,6 +300,25 @@ function mapGallery(row: Record<string, unknown>): GalleryRow {
     caption: String(row.caption ?? ''),
     category: String(row.category ?? ''),
   };
+}
+
+function mapSiteImage(row: Record<string, unknown>): SiteImageRow {
+  return {
+    key: String(row.image_key ?? ''),
+    value: String(row.image_url ?? ''),
+  };
+}
+
+function mapCategory(row: Record<string, unknown>): CategoryRow {
+  let stylists: string[] = [];
+  const raw = String(row.stylists ?? '');
+  try {
+    const parsed = JSON.parse(raw);
+    if (Array.isArray(parsed)) stylists = parsed.filter((x) => typeof x === 'string');
+  } catch {
+    // keep empty
+  }
+  return { name: String(row.name ?? ''), stylists };
 }
 
 function mapBooking(row: Record<string, unknown>): Booking {
@@ -270,6 +359,20 @@ async function queryCollection<K extends keyof ContentCollections>(
        FROM bookings ORDER BY created_at DESC, id`
     );
     return (rows.map(mapBooking) as unknown) as ContentCollections[K];
+  }
+
+  if (key === 'siteImages') {
+    const { rows } = await pool.query(
+      `SELECT image_key, image_url FROM site_images ORDER BY image_key ASC`
+    );
+    return (rows.map(mapSiteImage) as unknown) as ContentCollections[K];
+  }
+
+  if (key === 'categories') {
+    const { rows } = await pool.query(
+      `SELECT name, stylists FROM categories WHERE name <> '' ORDER BY name ASC`
+    );
+    return (rows.map(mapCategory) as unknown) as ContentCollections[K];
   }
 
   const { rows } = await pool.query(
@@ -361,9 +464,9 @@ async function replaceCollection<K extends keyof ContentCollections>(
         const s = rows[i];
         await cx.query(
           `INSERT INTO services
-             (id, name, description, price, duration_minutes, category, sort_order)
-           VALUES ($1,$2,$3,$4,$5,$6,$7)`,
-          [s.id, s.name, s.description, s.price, s.durationMinutes, s.category, i]
+             (id, name, description, price, duration_minutes, category, image, sort_order)
+           VALUES ($1,$2,$3,$4,$5,$6,$7,$8)`,
+          [s.id, s.name, s.description, s.price, s.durationMinutes, s.category, s.image ?? '', i]
         );
       }
     } else if (key === 'stylists') {
@@ -372,8 +475,8 @@ async function replaceCollection<K extends keyof ContentCollections>(
       for (let i = 0; i < rows.length; i++) {
         const st = rows[i];
         await cx.query(
-          `INSERT INTO stylists (id, name, role, sort_order) VALUES ($1,$2,$3,$4)`,
-          [st.id, st.name, st.role, i]
+          `INSERT INTO stylists (id, name, role, image, sort_order) VALUES ($1,$2,$3,$4,$5)`,
+          [st.id, st.name, st.role, st.image ?? '', i]
         );
       }
     } else if (key === 'gallery') {
@@ -386,6 +489,26 @@ async function replaceCollection<K extends keyof ContentCollections>(
            VALUES ($1,$2,$3,$4,$5)`,
           [g.image, g.alt, g.caption, g.category, i]
         );
+      }
+    } else if (key === 'siteImages') {
+      await cx.query('DELETE FROM site_images');
+      const rows = value as unknown as SiteImageRow[];
+      for (let i = 0; i < rows.length; i++) {
+        const img = rows[i];
+        await cx.query(
+          `INSERT INTO site_images (image_key, image_url) VALUES ($1,$2)`,
+          [img.key, img.value ?? '']
+        );
+      }
+    } else if (key === 'categories') {
+      await cx.query('DELETE FROM categories');
+      const rows = value as unknown as CategoryRow[];
+      for (const cat of rows) {
+        if (!cat.name) continue;
+        await cx.query(`INSERT INTO categories (name, stylists) VALUES ($1, $2)`, [
+          cat.name,
+          JSON.stringify(cat.stylists ?? []),
+        ]);
       }
     } else {
       // bookings: read-only in admin; allow replace for parity
@@ -433,32 +556,38 @@ export async function updateContent(
 ): Promise<void> {
   await ensureSchema();
   await withWriteLock(async () => {
-    const [services, stylists, gallery, bookings] = await Promise.all([
+    const [services, stylists, gallery, bookings, siteImages, categories] = await Promise.all([
       getCollection('services'),
       getCollection('stylists'),
       getCollection('gallery'),
       getCollection('bookings'),
+      getCollection('siteImages'),
+      getCollection('categories'),
     ]);
-    const next = fn({ services, stylists, gallery, bookings });
+    const next = fn({ services, stylists, gallery, bookings, siteImages, categories });
     if (next !== undefined) {
       // Persist only the collections that actually changed.
       if (next.services !== services) await replaceCollection('services', next.services);
       if (next.stylists !== stylists) await replaceCollection('stylists', next.stylists);
       if (next.gallery !== gallery) await replaceCollection('gallery', next.gallery);
       if (next.bookings !== bookings) await replaceCollection('bookings', next.bookings);
+      if (next.siteImages !== siteImages) await replaceCollection('siteImages', next.siteImages);
+      if (next.categories !== categories) await replaceCollection('categories', next.categories);
     }
   });
 }
 
 /** Read the full content (used by updateContent; public API parity). */
 export async function getContent(): Promise<ContentCollections> {
-  const [services, stylists, gallery, bookings] = await Promise.all([
+  const [services, stylists, gallery, bookings, siteImages, categories] = await Promise.all([
     getCollection('services'),
     getCollection('stylists'),
     getCollection('gallery'),
     getCollection('bookings'),
+    getCollection('siteImages'),
+    getCollection('categories'),
   ]);
-  return { services, stylists, gallery, bookings };
+  return { services, stylists, gallery, bookings, siteImages, categories };
 }
 
 /** Reset one collection back to its seed defaults. */
@@ -468,4 +597,4 @@ export async function resetCollection<K extends keyof ContentCollections>(
   await setCollection(key, (DEFAULTS[key] as unknown) as ContentCollections[K]);
 }
 
-export const COLLECTION_KEYS = ['services', 'stylists', 'gallery', 'bookings'] as const;
+export const COLLECTION_KEYS = ['services', 'stylists', 'gallery', 'bookings', 'siteImages', 'categories'] as const;

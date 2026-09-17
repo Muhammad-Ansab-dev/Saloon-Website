@@ -10,17 +10,7 @@ import React from 'react';
 import { motion } from 'motion/react';
 import { ScrollReveal, SpringReveal, Parallax } from '../../components/ui/ScrollReveal';
 import { useSiteContent } from '@/hooks/useSiteContent';
-
-const TEAM_IMAGES = [
-  '/images/hair-hero1.webp',
-  '/images/hair-hero2.webp',
-  '/images/hair-hero3.webp',
-  '/images/lookbook-3.webp',
-  '/images/instagram-2.webp',
-  '/images/hair-service1.webp',
-  '/images/press-1.webp',
-  '/images/lookbook-1.webp',
-];
+import { STYLIST_IMAGE_BY_ID } from '@/data/salonData';
 
 export const TeamSection: React.FC = () => {
   const { stylists } = useSiteContent();
@@ -64,7 +54,7 @@ export const TeamSection: React.FC = () => {
               <div className="relative h-[60vh] bg-neutral-200 overflow-hidden mb-4">
                 <Parallax amount={16}>
                   <img
-                    src={TEAM_IMAGES[idx]}
+                    src={stylist.image || STYLIST_IMAGE_BY_ID[stylist.id] || 'https://res.cloudinary.com/dittrfbja/image/upload/v1789651072/hair-salon/hair-hero1.webp'}
                     alt={stylist.name}
                     className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-700"
                   />

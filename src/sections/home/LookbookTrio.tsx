@@ -10,6 +10,7 @@ import React, { useState } from 'react';
 import { X, Sparkles, Play } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { ScrollReveal, SpringReveal } from '../../components/ui/ScrollReveal';
+import { VIDEO_POSTERS } from '../../data/galleryData';
 
 const CARD_DIRS = ['left', 'up', 'right'] as const;
 
@@ -21,13 +22,13 @@ interface ShortVideo {
   player: string;
 }
 
-const SHORT_IDS = ['rr7ACX0M_0c', 'j3L5MsVY3oE', 'RHr0md2bB74'];
+const SHORT_IDS = ['rr7ACX0M_0c', 'IUC_K7ZT0I0', 'RHr0md2bB74'];
 
 const VIDEOS: ShortVideo[] = SHORT_IDS.map((id, i) => ({
   id,
   title: `EDITORIAL FILM 0${i + 1}`,
   style: 'Styling in motion',
-  poster: `/videos/${id}.webp`,
+  poster: VIDEO_POSTERS[id] ?? `/videos/${id}.webp`,
   player: `https://www.youtube.com/embed/${id}?autoplay=1&mute=0&rel=0&playsinline=1`,
 }));
 

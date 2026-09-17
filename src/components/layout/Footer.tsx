@@ -140,8 +140,8 @@ export const Footer: React.FC<FooterProps> = ({ onScrollToTop }) => {
           {/* Copyright */}
           <p>
             © 2026 Paul Hair Studio. All Rights Reserved ·{' '}
-            <a href="/admin" className="hover:text-neutral-300 transition-colors">
-              Admin
+            <a href="/dashboard" className="hover:text-neutral-300 transition-colors">
+              Dashboard
             </a>
           </p>
 

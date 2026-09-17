@@ -5,7 +5,7 @@ export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   // Allow unauthenticated access to the login page itself.
-  if (pathname === '/admin/login') {
+  if (pathname === '/dashboard/login') {
     return NextResponse.next();
   }
 
@@ -13,12 +13,12 @@ export async function middleware(request: NextRequest) {
   const authorized = token ? await verifySessionToken(token) : false;
 
   if (!authorized) {
-    // API routes return 401 JSON; pages redirect to /admin/login.
+    // API routes return 401 JSON; pages redirect to /dashboard/login.
     if (pathname.startsWith('/api/')) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
     const loginUrl = request.nextUrl.clone();
-    loginUrl.pathname = '/admin/login';
+    loginUrl.pathname = '/dashboard/login';
     loginUrl.search = `?next=${encodeURIComponent(pathname)}`;
     return NextResponse.redirect(loginUrl);
   }
@@ -27,5 +27,5 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/admin/:path*', '/api/admin/:path*'],
+  matcher: ['/api/admin/:path*', '/dashboard'],
 };

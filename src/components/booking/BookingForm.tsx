@@ -14,6 +14,7 @@ import { ServiceItem } from '@/types';
 import { CalendarIcon, Clock, Loader2 } from 'lucide-react';
 import { useSiteContent } from '../../hooks/useSiteContent';
 import { DatePickerField } from './DatePickerField';
+import { TimeSlotDropdown } from './TimeSlotDropdown';
 import { generateTimeSlots, formatDisplayDate, todayISO } from '@/lib/bookingTime';
 
 interface BookingFormProps {
@@ -165,7 +166,7 @@ export const BookingForm: React.FC<BookingFormProps> = ({
           </div>
           <div className="flex justify-between">
             <span className="text-neutral-500">Price:</span>
-            <span className="font-bold text-black">CHF {currentService.price}</span>
+            <span className="font-bold text-black">USD {currentService.price}</span>
           </div>
         </div>
 
@@ -198,7 +199,7 @@ export const BookingForm: React.FC<BookingFormProps> = ({
         >
           {services.map((service) => (
             <option key={service.id} value={service.id}>
-              {service.name} — CHF {service.price} ({service.durationMinutes} min)
+              {service.name} — USD {service.price} ({service.durationMinutes} min)
             </option>
           ))}
         </select>
@@ -235,22 +236,12 @@ export const BookingForm: React.FC<BookingFormProps> = ({
             <Clock className="w-3.5 h-3.5" /> Time
             {availLoading && <Loader2 className="w-3 h-3 animate-spin opacity-50" />}
           </label>
-          <select
+          <TimeSlotDropdown
             value={bookingTime}
-            onChange={(e) => setBookingTime(e.target.value)}
-            disabled={availableSlots.length === 0}
-            className={`${inputCls} disabled:opacity-40`}
-          >
-            {availableSlots.length === 0 ? (
-              <option>{takenSlots.size > 0 ? 'No slots available' : 'Loading…'}</option>
-            ) : (
-              availableSlots.map((slot) => (
-                <option key={slot} value={slot}>
-                  {slot}
-                </option>
-              ))
-            )}
-          </select>
+            onChange={setBookingTime}
+            slots={availableSlots}
+            loading={availLoading}
+          />
         </div>
       </div>
 
@@ -326,7 +317,7 @@ export const BookingForm: React.FC<BookingFormProps> = ({
             <Loader2 className="w-3.5 h-3.5 animate-spin" /> Booking&hellip;
           </>
         ) : (
-          <>CONFIRM APPOINTMENT (CHF {currentService.price})</>
+          <>CONFIRM APPOINTMENT (USD {currentService.price})</>
         )}
       </button>
     </form>

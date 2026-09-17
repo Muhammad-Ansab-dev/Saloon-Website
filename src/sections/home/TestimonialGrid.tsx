@@ -10,22 +10,25 @@ import React, { useState } from 'react';
 import { Star, ChevronLeft, ChevronRight } from 'lucide-react';
 import { motion } from 'motion/react';
 import { TESTIMONIALS } from '@/data/salonData';
+import { useSiteContent } from '@/hooks/useSiteContent';
 
 const CLIENT_IMAGES = [
-  '/images/lookbook-3.webp',
-  '/images/lookbook-2.webp',
-  '/images/instagram-1.webp',
-  '/images/instagram-4.webp',
-  '/images/lookbook-1.webp',
-  '/images/hair-hero1.webp',
-  '/images/instagram-3.webp',
-  '/images/hair-hero2.webp',
-  '/images/hair-hero3.webp',
+  'https://res.cloudinary.com/dittrfbja/image/upload/v1789650832/hair-salon/lookbook-3.webp',
+  'https://res.cloudinary.com/dittrfbja/image/upload/v1789650831/hair-salon/lookbook-2.webp',
+  'https://res.cloudinary.com/dittrfbja/image/upload/v1789650823/hair-salon/instagram-1.webp',
+  'https://res.cloudinary.com/dittrfbja/image/upload/v1789650827/hair-salon/instagram-4.webp',
+  'https://res.cloudinary.com/dittrfbja/image/upload/v1789650830/hair-salon/lookbook-1.webp',
+  'https://res.cloudinary.com/dittrfbja/image/upload/v1789651072/hair-salon/hair-hero1.webp',
+  'https://res.cloudinary.com/dittrfbja/image/upload/v1789650825/hair-salon/instagram-3.webp',
+  'https://res.cloudinary.com/dittrfbja/image/upload/v1789651073/hair-salon/hair-hero2.webp',
+  'https://res.cloudinary.com/dittrfbja/image/upload/v1789650820/hair-salon/hair-hero3.webp',
 ];
 
 const TestimonialCard: React.FC<{ index: number }> = ({ index }) => {
+  const { images } = useSiteContent();
   const testimonial = TESTIMONIALS[index];
-  const image = CLIENT_IMAGES[index % CLIENT_IMAGES.length];
+  const image =
+    images[`testimonial.${(index % CLIENT_IMAGES.length) + 1}`] ?? CLIENT_IMAGES[index % CLIENT_IMAGES.length];
   return (
     <>
       {/* Image — left 40% (desktop) */}

@@ -7,8 +7,10 @@
 
 import React from 'react';
 import { SpringReveal, Parallax } from '../../components/ui/ScrollReveal';
+import { useSiteContent } from '@/hooks/useSiteContent';
 
 export const About: React.FC = () => {
+  const { images } = useSiteContent();
   return (
     <section id="about" className="relative bg-white py-20 sm:py-28 overflow-hidden">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -23,7 +25,7 @@ export const About: React.FC = () => {
             >
               <Parallax amount={26}>
                 <img
-                  src="/images/lookbook-2.webp"
+                  src={images.about ?? 'https://res.cloudinary.com/dittrfbja/image/upload/v1789650831/hair-salon/lookbook-2.webp'}
                   alt="Paul Hair Studio salon atmosphere"
                   className="w-full h-[420px] sm:h-[580px] object-cover object-center group-hover:scale-105 transition-transform duration-700"
                   loading="lazy"

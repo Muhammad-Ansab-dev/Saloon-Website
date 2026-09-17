@@ -1,9 +1,8 @@
 'use client';
 // ---------------------------------------------------------------------------
-// AdminLogin — client page for the /admin/login route. Submits username +
-// password to POST /api/auth/login, which sets an httpOnly session cookie.
-// On success it follows the ?next= target (default /admin).
-// No animation overhead — it is a utility screen for the owner.
+// DashboardLogin — client page for the /dashboard/login route. Submits
+// username + password to POST /api/auth/login, which sets an httpOnly session
+// cookie, then redirects straight back into the dashboard control center.
 // ---------------------------------------------------------------------------
 import React, { Suspense, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -33,7 +32,7 @@ function LoginForm() {
         return;
       }
       const next = params.get('next');
-      router.replace(next && next.startsWith('/admin') ? next : '/admin');
+      router.replace(next && next.startsWith('/dashboard') ? next : '/dashboard');
     } catch {
       setError('Network error — try again.');
       setLoading(false);
@@ -49,7 +48,7 @@ function LoginForm() {
             PAUL HAIR STUDIO
           </h1>
           <p className="text-[11px] tracking-[0.3em] uppercase text-neutral-400 mt-1">
-            Admin Dashboard
+            Dashboard
           </p>
         </div>
 
@@ -101,7 +100,7 @@ function LoginForm() {
   );
 }
 
-export default function AdminLoginPage() {
+export default function DashboardLoginPage() {
   return (
     <Suspense>
       <LoginForm />

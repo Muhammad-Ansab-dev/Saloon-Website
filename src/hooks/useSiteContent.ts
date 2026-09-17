@@ -8,19 +8,32 @@
 // optional `initial` override (server-rendered collections) to avoid a flash.
 // ---------------------------------------------------------------------------
 import { useEffect, useState } from 'react';
-import { SERVICES, STYLISTS } from '@/data/salonData';
+import type { ServiceItem } from '@/types';
+import { SERVICES, STYLISTS, SITE_IMAGES_DEFAULTS } from '@/data/salonData';
 import { GALLERY_ITEMS } from '@/data/galleryData';
 
+export interface SiteService extends ServiceItem {
+  image?: string;
+}
+export interface SiteStylist {
+  id: string;
+  name: string;
+  role: string;
+  image?: string;
+}
+
 export interface SiteContent {
-  services: typeof SERVICES;
-  stylists: typeof STYLISTS;
+  services: SiteService[];
+  stylists: SiteStylist[];
   gallery: typeof GALLERY_ITEMS;
+  images: Record<string, string>;
 }
 
 const STATIC: SiteContent = {
   services: SERVICES,
   stylists: STYLISTS,
   gallery: GALLERY_ITEMS,
+  images: SITE_IMAGES_DEFAULTS,
 };
 
 export function useSiteContent(initial?: Partial<SiteContent>): SiteContent {
@@ -36,6 +49,7 @@ export function useSiteContent(initial?: Partial<SiteContent>): SiteContent {
           services: Array.isArray(data.services) ? data.services : SERVICES,
           stylists: Array.isArray(data.stylists) ? data.stylists : STYLISTS,
           gallery: Array.isArray(data.gallery) ? data.gallery : GALLERY_ITEMS,
+          images: data.images && typeof data.images === 'object' ? data.images : SITE_IMAGES_DEFAULTS,
         });
       })
       .catch(() => {

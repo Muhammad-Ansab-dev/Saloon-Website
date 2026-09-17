@@ -61,6 +61,7 @@ export const ServiceMenu: React.FC<ServiceMenuProps> = ({ onSelectService }) => 
 
   const activeService = visibleServices.find((service) => service.id === activeServiceId) ?? visibleServices[0];
   const activeMedia = activeService ? SERVICE_MEDIA[activeService.id] : undefined;
+  const svcImage = activeService?.image || activeMedia?.image;
 
   return (
     <section id="services" className="bg-white py-20 sm:py-28">
@@ -153,7 +154,7 @@ export const ServiceMenu: React.FC<ServiceMenuProps> = ({ onSelectService }) => 
                   <AnimatePresence mode="popLayout">
                     <motion.img
                       key={activeService?.id}
-                      src={activeMedia?.image ?? '/images/hero-1.webp'}
+                      src={svcImage ?? 'https://res.cloudinary.com/dittrfbja/image/upload/v1789650822/hair-salon/hero-1.webp'}
                       alt={activeMedia?.alt ?? activeService?.name ?? 'Service'}
                       initial={{ opacity: 0, scale: 1.04 }}
                       animate={{ opacity: 1, scale: 1 }}

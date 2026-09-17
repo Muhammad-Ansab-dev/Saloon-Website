@@ -91,7 +91,7 @@ export const LOOKBOOK_ITEMS: LookbookItem[] = [
     title: 'TEXTURED SWEPT CROP',
     model: 'Julian Vance',
     style: 'Artistic Matte Texture',
-    image: '/images/hair-gallery1.webp',
+    image: 'https://res.cloudinary.com/dittrfbja/image/upload/v1789651071/hair-salon/hair-gallery1.webp',
     alt: 'Male model with tousled wavy haircut'
   },
   {
@@ -99,7 +99,7 @@ export const LOOKBOOK_ITEMS: LookbookItem[] = [
     title: 'THE GOLDEN FLORA TWIST',
     model: 'Elena Rostova',
     style: 'Haute Couture Bridal Chignon',
-    image: '/images/lookbook-2.webp',
+    image: 'https://res.cloudinary.com/dittrfbja/image/upload/v1789650831/hair-salon/lookbook-2.webp',
     alt: 'Back view of elegant blonde hair twist with gold leaf ornament'
   },
   {
@@ -107,7 +107,7 @@ export const LOOKBOOK_ITEMS: LookbookItem[] = [
     title: 'EDITORIAL WET STRAND PROFILE',
     model: 'Clara Delacroix',
     style: 'High Fashion Sculpted Wet Look',
-    image: '/images/lookbook-3.webp',
+    image: 'https://res.cloudinary.com/dittrfbja/image/upload/v1789650832/hair-salon/lookbook-3.webp',
     alt: 'Side profile of female model with dark glossy styled hair strands'
   }
 ];
@@ -204,7 +204,7 @@ export const PRESS_ARTICLES: PressArticle[] = [
     title: 'MODERN HIGHLIGHTS SEASON TRENDS',
     excerpt: 'Discover the revolutionary balayage and tone-feathering techniques defining this autumn’s haute couture runways.',
     content: 'Hair color in the modern era is no longer about uniform saturation; it is an intimate play of light, shadow, and organic movement. At Paul Hair Studio, our signature multi-dimensional color placement illuminates the cheekbones and contours naturally without harsh demarcation lines.',
-    image: '/images/press-1.webp',
+    image: 'https://res.cloudinary.com/dittrfbja/image/upload/v1789650833/hair-salon/press-1.webp',
     readTime: '4 min read'
   },
   {
@@ -215,7 +215,7 @@ export const PRESS_ARTICLES: PressArticle[] = [
     title: 'ECO FRIENDLY GENTLE HAIR CARE PRODUCTS',
     excerpt: 'How clean bio-fermented ingredients are replacing synthetic polymers without compromising runway-grade performance.',
     content: 'Sustainability is an uncompromising pillar of luxury. Our in-house botanical laboratory synthesizes plant squalane, cold-pressed marula, and cold-extracted oat lipids into microscopic delivery vehicles that penetrate the cortex effortlessly.',
-    image: '/images/press-2.webp',
+    image: 'https://res.cloudinary.com/dittrfbja/image/upload/v1789650834/hair-salon/press-2.webp',
     readTime: '3 min read'
   },
   {
@@ -226,7 +226,7 @@ export const PRESS_ARTICLES: PressArticle[] = [
     title: 'FAMOUS HAIRSTYLES AND PHOTOGRAPHY',
     excerpt: 'Behind the lens with master photographer Lucas Stern exploring motion and silhouette in editorial portraiture.',
     content: 'Hair is sculpture in motion. In our exclusive collaboration with European fashion houses, we explored how high-speed strobe photography captures the micro-second velocity of brushed tresses in atmospheric wind.',
-    image: '/images/press-3.webp',
+    image: 'https://res.cloudinary.com/dittrfbja/image/upload/v1789650836/hair-salon/press-3.webp',
     readTime: '5 min read'
   }
 ];
@@ -332,51 +332,51 @@ export const SERVICES: ServiceItem[] = [
 
 export const SERVICE_MEDIA: Record<string, { image: string; alt: string }> = {
   'srv-1': {
-    image: '/images/hero-1.webp',
+    image: 'https://res.cloudinary.com/dittrfbja/image/upload/v1789650822/hair-salon/hero-1.webp',
     alt: 'Master stylist finishing a precision haircut with a blow dry'
   },
   'srv-2': {
-    image: '/images/instagram-3.webp',
+    image: 'https://res.cloudinary.com/dittrfbja/image/upload/v1789650825/hair-salon/instagram-3.webp',
     alt: 'Sleek graphic bob finished with soft curls'
   },
   'srv-3': {
-    image: '/images/hair-hero2.webp',
+    image: 'https://res.cloudinary.com/dittrfbja/image/upload/v1789651073/hair-salon/hair-hero2.webp',
     alt: 'Relaxing shampoo and scalp ritual'
   },
   'srv-4': {
-    image: '/images/instagram-4.webp',
+    image: 'https://res.cloudinary.com/dittrfbja/image/upload/v1789650827/hair-salon/instagram-4.webp',
     alt: 'Honey gloss highlights with beach waves'
   },
   'srv-5': {
-    image: '/images/hair-service1.webp',
+    image: 'https://res.cloudinary.com/dittrfbja/image/upload/v1789650820/hair-salon/hair-service1.webp',
     alt: 'Barber precision cutting with comb and scissors'
   },
   'srv-6': {
-    image: '/images/press-1.webp',
+    image: 'https://res.cloudinary.com/dittrfbja/image/upload/v1789650833/hair-salon/press-1.webp',
     alt: 'Master barber sculpting a defined beard with a straight razor'
   },
   'srv-7': {
-    image: '/images/lookbook-3.webp',
+    image: 'https://res.cloudinary.com/dittrfbja/image/upload/v1789650832/hair-salon/lookbook-3.webp',
     alt: 'Glossy brunette finish with mirror-like shine'
   },
   'srv-8': {
-    image: '/images/instagram-2.webp',
+    image: 'https://res.cloudinary.com/dittrfbja/image/upload/v1789650824/hair-salon/instagram-2.webp',
     alt: 'Hand dispensing golden botanical hair elixir serum'
   },
   'srv-9': {
-    image: '/images/instagram-1.webp',
+    image: 'https://res.cloudinary.com/dittrfbja/image/upload/v1789650823/hair-salon/instagram-1.webp',
     alt: 'Sculptural editorial updo styled for an event'
   },
   'srv-10': {
-    image: '/images/lookbook-1.webp',
+    image: 'https://res.cloudinary.com/dittrfbja/image/upload/v1789650830/hair-salon/lookbook-1.webp',
     alt: 'Hand-painted balayage with dimensional honey tones'
   },
   'srv-11': {
-    image: '/images/hair-gallery1.webp',
+    image: 'https://res.cloudinary.com/dittrfbja/image/upload/v1789651071/hair-salon/hair-gallery1.webp',
     alt: 'Natural curls refreshed and defined by a hydration cut'
   },
   'srv-12': {
-    image: '/images/lookbook-2.webp',
+    image: 'https://res.cloudinary.com/dittrfbja/image/upload/v1789650831/hair-salon/lookbook-2.webp',
     alt: 'Sleek corporate blow dry with a polished finish'
   }
 };
@@ -384,35 +384,35 @@ export const SERVICE_MEDIA: Record<string, { image: string; alt: string }> = {
 export const INSTAGRAM_POSTS = [
   {
     id: 'ig-1',
-    image: '/images/instagram-1.webp',
+    image: 'https://res.cloudinary.com/dittrfbja/image/upload/v1789650823/hair-salon/instagram-1.webp',
     alt: 'Master stylist scissor work on textured male crop',
     likes: '1.4k',
     caption: 'Precision taper fade and natural flow by Master Paul.'
   },
   {
     id: 'ig-2',
-    image: '/images/instagram-2.webp',
+    image: 'https://res.cloudinary.com/dittrfbja/image/upload/v1789650824/hair-salon/instagram-2.webp',
     alt: 'Hand dispensing golden organic hair elixir serum',
     likes: '890',
     caption: 'Gold droplet drops: Pure cold-pressed botanical silk serum.'
   },
   {
     id: 'ig-3',
-    image: '/images/instagram-3.webp',
+    image: 'https://res.cloudinary.com/dittrfbja/image/upload/v1789650825/hair-salon/instagram-3.webp',
     alt: 'Sleek dark graphic bob cut on Asian female model',
     likes: '2.1k',
     caption: 'High-contrast graphic chin-length bob paired with crimson lip.'
   },
   {
     id: 'ig-4',
-    image: '/images/instagram-4.webp',
+    image: 'https://res.cloudinary.com/dittrfbja/image/upload/v1789650827/hair-salon/instagram-4.webp',
     alt: 'Brunette model showing honey gloss highlights and soft beach waves',
     likes: '1.2k',
     caption: 'Sun-drenched honey balayage for the upcoming gala season.'
   },
   {
     id: 'ig-5',
-    image: '/images/press-2.webp',
+    image: 'https://res.cloudinary.com/dittrfbja/image/upload/v1789650834/hair-salon/press-2.webp',
     alt: 'Paul haircare luxury amber glass bottles with pump dispenser',
     likes: '950',
     caption: 'Our signature restorative collection in recyclable matte glass.'
@@ -429,3 +429,49 @@ export const STYLISTS = [
   { id: 'amelie', name: 'Amélie Rousseau', role: 'Trainee & Scalp Therapist' },
   { id: 'nina', name: 'Nina Vogel', role: 'Colourist & Bridal Specialist' }
 ];
+
+// ── Image CMS defaults ─────────────────────────────────────────────
+// The site's images live in the PostgreSQL content store (site_images
+// table + the image columns on services / stylists). These maps are the
+// seed defaults AND the public-site fallbacks until an admin replaces an
+// image via the dashboard Media tab.
+export const SERVICE_IMAGE_BY_ID: Record<string, string> = Object.fromEntries(
+  Object.entries(SERVICE_MEDIA).map(([id, m]) => [id, m.image])
+) as Record<string, string>;
+
+export const STYLIST_IMAGE_BY_ID: Record<string, string> = {
+  paul: 'https://res.cloudinary.com/dittrfbja/image/upload/v1789651072/hair-salon/hair-hero1.webp',
+  claire: 'https://res.cloudinary.com/dittrfbja/image/upload/v1789651073/hair-salon/hair-hero2.webp',
+  lucas: 'https://res.cloudinary.com/dittrfbja/image/upload/v1789650820/hair-salon/hair-hero3.webp',
+  sophie: 'https://res.cloudinary.com/dittrfbja/image/upload/v1789650832/hair-salon/lookbook-3.webp',
+  lena: 'https://res.cloudinary.com/dittrfbja/image/upload/v1789650824/hair-salon/instagram-2.webp',
+  marc: 'https://res.cloudinary.com/dittrfbja/image/upload/v1789650820/hair-salon/hair-service1.webp',
+  amelie: 'https://res.cloudinary.com/dittrfbja/image/upload/v1789650833/hair-salon/press-1.webp',
+  nina: 'https://res.cloudinary.com/dittrfbja/image/upload/v1789650830/hair-salon/lookbook-1.webp',
+};
+
+export const SITE_IMAGES_DEFAULTS: Record<string, string> = {
+  'hero.1': 'https://res.cloudinary.com/dittrfbja/image/upload/v1789650822/hair-salon/hero-1.webp',
+  'hero.2': 'https://res.cloudinary.com/dittrfbja/image/upload/v1789651073/hair-salon/hair-hero2.webp',
+  'hero.3': 'https://res.cloudinary.com/dittrfbja/image/upload/v1789650820/hair-salon/hair-hero3.webp',
+  'hero.4': 'https://res.cloudinary.com/dittrfbja/image/upload/v1789650832/hair-salon/lookbook-3.webp',
+  about: 'https://res.cloudinary.com/dittrfbja/image/upload/v1789650831/hair-salon/lookbook-2.webp',
+  visitUs: 'https://res.cloudinary.com/dittrfbja/image/upload/v1789650838/hair-salon/visitus.webp',
+  'category.Cut & Style': 'https://res.cloudinary.com/dittrfbja/image/upload/v1789651071/hair-salon/hair-gallery1.webp',
+  'category.Style & Finish': 'https://res.cloudinary.com/dittrfbja/image/upload/v1789650831/hair-salon/lookbook-2.webp',
+  'category.Wash & Refresh': 'https://res.cloudinary.com/dittrfbja/image/upload/v1789650833/hair-salon/press-1.webp',
+  'category.Color & Cut': 'https://res.cloudinary.com/dittrfbja/image/upload/v1789650827/hair-salon/instagram-4.webp',
+  'category.Cut & Texture': 'https://res.cloudinary.com/dittrfbja/image/upload/v1789650832/hair-salon/lookbook-3.webp',
+  'category.Bridal & Occasion': 'https://res.cloudinary.com/dittrfbja/image/upload/v1789650830/hair-salon/lookbook-1.webp',
+  'testimonial.1': 'https://res.cloudinary.com/dittrfbja/image/upload/v1789650832/hair-salon/lookbook-3.webp',
+  'testimonial.2': 'https://res.cloudinary.com/dittrfbja/image/upload/v1789650831/hair-salon/lookbook-2.webp',
+  'testimonial.3': 'https://res.cloudinary.com/dittrfbja/image/upload/v1789650823/hair-salon/instagram-1.webp',
+  'testimonial.4': 'https://res.cloudinary.com/dittrfbja/image/upload/v1789650827/hair-salon/instagram-4.webp',
+  'testimonial.5': 'https://res.cloudinary.com/dittrfbja/image/upload/v1789650830/hair-salon/lookbook-1.webp',
+  'testimonial.6': 'https://res.cloudinary.com/dittrfbja/image/upload/v1789651072/hair-salon/hair-hero1.webp',
+  'testimonial.7': 'https://res.cloudinary.com/dittrfbja/image/upload/v1789650825/hair-salon/instagram-3.webp',
+  'testimonial.8': 'https://res.cloudinary.com/dittrfbja/image/upload/v1789651073/hair-salon/hair-hero2.webp',
+  'testimonial.9': 'https://res.cloudinary.com/dittrfbja/image/upload/v1789650820/hair-salon/hair-hero3.webp',
+  'branch.zurich': 'https://res.cloudinary.com/dittrfbja/image/upload/v1789650838/hair-salon/visitus.webp',
+  'branch.paris': 'https://res.cloudinary.com/dittrfbja/image/upload/v1789650836/hair-salon/servicemenu.webp',
+};

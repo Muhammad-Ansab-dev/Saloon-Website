@@ -11,20 +11,10 @@
 import React, { useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion, useScroll, useTransform, useInView } from 'motion/react';
-import { STYLISTS, LOCATIONS } from '@/data/salonData';
+import { STYLISTS, LOCATIONS, STYLIST_IMAGE_BY_ID } from '@/data/salonData';
 import { ScrollReveal, SpringReveal, Parallax } from '../../components/ui/ScrollReveal';
 import { ArrowRight, Scissors, Flower2, Leaf, Gem } from 'lucide-react';
-
-const TEAM_IMAGES = [
-  '/images/hair-hero1.webp',
-  '/images/hair-hero2.webp',
-  '/images/hair-hero3.webp',
-  '/images/lookbook-3.webp',
-  '/images/instagram-2.webp',
-  '/images/hair-service1.webp',
-  '/images/press-1.webp',
-  '/images/lookbook-1.webp',
-];
+import { useSiteContent } from '@/hooks/useSiteContent';
 
 const VALUES = [
   {
@@ -147,6 +137,7 @@ const MilestoneItem: React.FC<{ milestone: Milestone; index: number }> = ({ mile
 
 export const AboutPage: React.FC = () => {
   const router = useRouter();
+  const { stylists } = useSiteContent({ stylists: STYLISTS });
   const heroRef = useRef<HTMLDivElement>(null);
   const milestonesRef = useRef<HTMLDivElement>(null);
 
@@ -170,7 +161,7 @@ export const AboutPage: React.FC = () => {
       <div ref={heroRef} className="relative h-[70vh] sm:h-[80vh] min-h-[480px] bg-neutral-900 overflow-hidden">
         <motion.div style={{ y: heroBgY, scale: heroBgScale, opacity: heroFade }} className="absolute inset-0">
           <img
-            src="/images/press-3.webp"
+            src="https://res.cloudinary.com/dittrfbja/image/upload/v1789650836/hair-salon/press-3.webp"
             alt="Paul Hair Studio editorial craft"
             className="w-full h-full object-cover object-center filter contrast-110 brightness-90"
           />
@@ -246,7 +237,7 @@ export const AboutPage: React.FC = () => {
                 <div className="relative h-[420px] sm:h-[520px]">
                   <Parallax amount={30}>
                     <img
-                      src="/images/lookbook-2.webp"
+                      src="https://res.cloudinary.com/dittrfbja/image/upload/v1789650831/hair-salon/lookbook-2.webp"
                       alt="Inside Paul Hair Studio"
                       className="w-full h-[520px] object-cover object-center"
                     />
@@ -301,7 +292,7 @@ export const AboutPage: React.FC = () => {
                 <div className="relative h-[400px] sm:h-[500px]">
                   <Parallax amount={24}>
                     <img
-                      src="/images/press-3.webp"
+                      src="https://res.cloudinary.com/dittrfbja/image/upload/v1789650836/hair-salon/press-3.webp"
                       alt="Paul Delacroix, Founder & Creative Director"
                       className="w-full h-[500px] object-cover object-center filter contrast-110 brightness-90"
                     />
@@ -404,7 +395,7 @@ export const AboutPage: React.FC = () => {
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 sm:gap-8 lg:gap-10">
-            {STYLISTS.map((stylist, idx) => (
+            {stylists.map((stylist, idx) => (
               <SpringReveal
                 key={stylist.id}
                 direction={idx % 2 === 0 ? 'left' : 'right'}
@@ -416,7 +407,7 @@ export const AboutPage: React.FC = () => {
                 <div className="relative h-[80vh] sm:h-[85vh] bg-neutral-200 overflow-hidden mb-4">
                   <Parallax amount={16}>
                     <img
-                      src={TEAM_IMAGES[idx]}
+                      src={stylist.image || STYLIST_IMAGE_BY_ID[stylist.id] || 'https://res.cloudinary.com/dittrfbja/image/upload/v1789651072/hair-salon/hair-hero1.webp'}
                       alt={stylist.name}
                       className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-700"
                     />

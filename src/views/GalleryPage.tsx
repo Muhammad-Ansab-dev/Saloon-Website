@@ -9,7 +9,7 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { X, Sparkles, Play, Film } from 'lucide-react';
-import { GALLERY_VIDEOS, GALLERY_CATEGORIES } from '@/data/galleryData';
+import { GALLERY_VIDEOS, GALLERY_CATEGORIES, VIDEO_POSTERS } from '@/data/galleryData';
 
 interface ShortVideo {
   id: string;
@@ -25,7 +25,7 @@ const VIDEOS: ShortVideo[] = GALLERY_VIDEOS.map((video) => ({
   title: video.title,
   style: video.style,
   category: video.category,
-  poster: `/videos/${video.id}.webp`,
+  poster: VIDEO_POSTERS[video.id] ?? `/videos/${video.id}.webp`,
   player: `https://www.youtube.com/embed/${video.id}?autoplay=1&mute=0&rel=0&playsinline=1`,
 }));
 

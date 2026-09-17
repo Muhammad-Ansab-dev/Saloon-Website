@@ -11,19 +11,19 @@ import { ServiceItem } from '@/types';
 import { motion } from 'motion/react';
 
 const CATEGORY_MEDIA: Record<string, string> = {
-  'Cut & Style': '/images/hair-gallery1.webp',
-  'Style & Finish': '/images/lookbook-2.webp',
-  'Wash & Refresh': '/images/press-1.webp',
-  'Color & Cut': '/images/instagram-4.webp',
-  'Cut & Texture': '/images/lookbook-3.webp',
-  'Bridal & Occasion': '/images/lookbook-1.webp',
+  'Cut & Style': 'https://res.cloudinary.com/dittrfbja/image/upload/v1789651071/hair-salon/hair-gallery1.webp',
+  'Style & Finish': 'https://res.cloudinary.com/dittrfbja/image/upload/v1789650831/hair-salon/lookbook-2.webp',
+  'Wash & Refresh': 'https://res.cloudinary.com/dittrfbja/image/upload/v1789650833/hair-salon/press-1.webp',
+  'Color & Cut': 'https://res.cloudinary.com/dittrfbja/image/upload/v1789650827/hair-salon/instagram-4.webp',
+  'Cut & Texture': 'https://res.cloudinary.com/dittrfbja/image/upload/v1789650832/hair-salon/lookbook-3.webp',
+  'Bridal & Occasion': 'https://res.cloudinary.com/dittrfbja/image/upload/v1789650830/hair-salon/lookbook-1.webp',
 };
 
 export const categorySlug = (category: string) =>
   category.toLowerCase().replace(/[^a-z0-9]+/g, '-');
 
 export const ServicesCategories: React.FC<{ initialServices?: ServiceItem[] }> = ({ initialServices }) => {
-  const { services } = useSiteContent(
+  const { services, images } = useSiteContent(
     initialServices ? { services: initialServices } : undefined
   );
   const categories = Array.from(new Set(services.map((service) => service.category)));
@@ -65,7 +65,7 @@ export const ServicesCategories: React.FC<{ initialServices?: ServiceItem[] }> =
                 >
                   <div className="relative aspect-[4/3] overflow-hidden">
                     <img
-                      src={CATEGORY_MEDIA[category] ?? '/images/hero-1.webp'}
+                      src={images[`category.${category}`] ?? CATEGORY_MEDIA[category] ?? 'https://res.cloudinary.com/dittrfbja/image/upload/v1789650822/hair-salon/hero-1.webp'}
                       alt={category}
                       loading="lazy"
                       className="absolute inset-0 w-full h-full object-cover object-center transition-transform duration-700 ease-out group-hover:scale-105"
