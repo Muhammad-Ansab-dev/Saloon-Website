@@ -87,8 +87,8 @@ function parseServicePatch(patch: Record<string, unknown>): Record<string, strin
  *   DELETE /api/admin/bookings    → delete one booking  (body: { id })
  *   POST /api/admin/[col]/reset   → restore seed defaults
  * The bookings collection is created via /api/booking (public form).
- * New bookings are auto-created as `confirmed` (see /api/booking), so the
- * admin only ever moves a booking to completed / cancelled.
+ * New bookings arrive as `pending` (see /api/booking); the admin confirms
+ * them from the dashboard and later moves them to completed / cancelled.
  */
 export async function POST(
   request: Request,
@@ -126,7 +126,7 @@ export async function POST(
       return NextResponse.json({ error: 'Invalid email address' }, { status: 400 });
     }
     const status: BookingStatus =
-      typeof body.status === 'string' && isBookingStatus(body.status) ? body.status : 'confirmed';
+      typeof body.status === 'string' && isBookingStatus(body.status) ? body.status : 'pending';
     const booking: Booking = {
       id: `bk-${Date.now().toString(36)}${Math.random().toString(36).slice(2, 7)}`,
       serviceId: typeof body.serviceId === 'string' ? body.serviceId.trim() : '',

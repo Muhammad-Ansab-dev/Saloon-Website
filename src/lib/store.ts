@@ -19,8 +19,9 @@
 // from the TS defaults in data/salonData.ts / galleryData.ts.
 // Collections are replaced wholesale on save (DELETE + INSERT in a
 // transaction) so admin "Save" semantics stay identical to before.
-// Bookings: created as `confirmed` by /api/booking; status changes go
-// through a targeted UPDATE (updateBooking), not a full rewrite.
+// Bookings: created as `pending` by /api/booking and confirmed manually
+// by the admin; status changes go through a targeted UPDATE
+// (updateBooking), not a full rewrite.
 //   collections: services, stylists, gallery, bookings, siteImages, categories
 // ─────────────────────────────────────────────────────────────
 import { Pool } from 'pg';
@@ -168,7 +169,7 @@ CREATE TABLE IF NOT EXISTS bookings (
   client_email TEXT NOT NULL DEFAULT '',
   client_phone TEXT NOT NULL DEFAULT '',
   notes TEXT NOT NULL DEFAULT '',
-  status TEXT NOT NULL DEFAULT 'confirmed',
+  status TEXT NOT NULL DEFAULT 'pending',
   created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 `;
@@ -183,7 +184,10 @@ async function ensureSchema(): Promise<void> {
       const pool = getPool();
       await pool.query(SCHEMA_SQL);
       await pool.query(
-        `ALTER TABLE bookings ADD COLUMN IF NOT EXISTS status TEXT NOT NULL DEFAULT 'confirmed'`
+        `ALTER TABLE bookings ADD COLUMN IF NOT EXISTS status TEXT NOT NULL DEFAULT 'pending'`
+      );
+      await pool.query(
+        `ALTER TABLE bookings ALTER COLUMN status SET DEFAULT 'pending'`
       );
       await pool.query(
         `ALTER TABLE services ADD COLUMN IF NOT EXISTS image TEXT NOT NULL DEFAULT ''`
@@ -433,8 +437,8 @@ export async function setCollection<K extends keyof ContentCollections>(
 /** Update one booking field in place (targeted UPDATE, no full-table
  * rewrite). Returns the number of rows affected — 0 means "not found".
  * Runs through the serial write queue so it never interleaves with a
- * wholesale save. New bookings are created as `confirmed` by the public
- * /api/booking endpoint, so admins rarely need to touch status. */
+ * wholesale save. New bookings arrive as `pending` (see /api/booking);
+ * admins confirm, complete, or cancel them here. */
 export async function updateBooking(
   id: string,
   patch: { status?: BookingStatus }
