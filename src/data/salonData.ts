@@ -311,15 +311,27 @@ export const SERVICE_MEDIA: Record<string, { image: string; alt: string }> = {
 };
 
 export const STYLISTS = [
-  { id: 'paul', name: 'Paul Delacroix', role: 'Creative Director & Master Stylist' },
-  { id: 'claire', name: 'Claire Moreau', role: 'Senior Colorist & Balayage Specialist' },
-  { id: 'lucas', name: 'Lucas Stern', role: 'Master Barber & Texture Expert' },
-  { id: 'sophie', name: 'Sophie Weber', role: 'Editorial Stylist & Scalp Specialist' },
-  { id: 'lena', name: 'Lena Fischer', role: 'Junior Stylist & Colourist' },
-  { id: 'marc', name: 'Marc Dubois', role: 'Apprentice Barber' },
-  { id: 'amelie', name: 'Amélie Rousseau', role: 'Trainee & Scalp Therapist' },
-  { id: 'nina', name: 'Nina Vogel', role: 'Colourist & Bridal Specialist' }
+  { id: 'paul', name: 'Paul Delacroix', role: 'Creative Director & Master Stylist', branch: 'zurich' },
+  { id: 'claire', name: 'Claire Moreau', role: 'Senior Colorist & Balayage Specialist', branch: 'zurich' },
+  { id: 'lucas', name: 'Lucas Stern', role: 'Master Barber & Texture Expert', branch: 'zurich' },
+  { id: 'sophie', name: 'Sophie Weber', role: 'Editorial Stylist & Scalp Specialist', branch: 'zurich' },
+  { id: 'lena', name: 'Lena Fischer', role: 'Junior Stylist & Colourist', branch: 'zurich' },
+  { id: 'marc', name: 'Marc Dubois', role: 'Apprentice Barber', branch: 'paris' },
+  { id: 'amelie', name: 'Amélie Rousseau', role: 'Trainee & Scalp Therapist', branch: 'paris' },
+  { id: 'nina', name: 'Nina Vogel', role: 'Colourist & Bridal Specialist', branch: 'paris' }
 ];
+
+// Stylist → branch slug lookup. Serves as the fallback for DB rows that
+// predate the `branch` column (seed rows are backfilled by this map).
+export const BRANCH_BY_STYLIST_ID: Record<string, string> = Object.fromEntries(
+  STYLISTS.map((s) => [s.id, s.branch])
+);
+
+/** Resolve a stylist's branch slug, preferring a stored branch and falling back to the static map. */
+export function stylistBranch(stylist: { id?: string; branch?: string }): string {
+  const key = stylist.id ?? '';
+  return (stylist.branch || BRANCH_BY_STYLIST_ID[key] || '').toLowerCase();
+}
 
 // ── Image CMS defaults ─────────────────────────────────────────────
 // The site's images live in the PostgreSQL content store (site_images
@@ -366,3 +378,60 @@ export const SITE_IMAGES_DEFAULTS: Record<string, string> = {
   'branch.zurich': 'https://res.cloudinary.com/dittrfbja/image/upload/v1789650838/hair-salon/visitus.webp',
   'branch.paris': 'https://res.cloudinary.com/dittrfbja/image/upload/v1789650836/hair-salon/servicemenu.webp',
 };
+
+/** Hero slides — single source of truth for the homepage hero copy.
+ * Images are overridable per slide via the `hero.N` image slots (Media
+ * tab); text is overridable via the Content tab (site_texts collection,
+ * keys `hero.N.accent|title|description`). Editors change the defaults
+ * here, admins change the live copy from the dashboard. */
+export interface HeroSlide {
+  accent: string;
+  title: string;
+  description: string;
+  image: string;
+}
+
+export const HERO_SLIDES: HeroSlide[] = [
+  {
+    accent: 'Warm & Cozy',
+    title: 'Rejuvenate Your Body & Mind',
+    description:
+      'Step into a warm, welcoming space designed to help you unwind, recharge, and leave feeling brand new.',
+    image: SITE_IMAGES_DEFAULTS['hero.1'],
+  },
+  {
+    accent: 'Fresh & Floral',
+    title: 'Blossom Into Your Best Self',
+    description:
+      'Fresh floral tones and soft textures that bring out your natural radiance, season after season.',
+    image: SITE_IMAGES_DEFAULTS['hero.2'],
+  },
+  {
+    accent: 'Bold & Bright',
+    title: 'Stand Out With Style',
+    description:
+      'Confident, statement looks crafted by our stylists — so every entrance feels like your moment.',
+    image: SITE_IMAGES_DEFAULTS['hero.3'],
+  },
+  {
+    accent: 'Soft & Serene',
+    title: 'Where Calm Meets Beauty',
+    description:
+      'A serene escape where gentle care meets expert artistry, giving you calm and beauty in one visit.',
+    image: SITE_IMAGES_DEFAULTS['hero.4'],
+  },
+];
+
+/** Editable, admin-driven text slots for the hero — keyed per slide. The
+ * Content dashboard tab writes these to the site_texts collection; the
+ * hero (and the default seed) read from this map on first boot. */
+export const SITE_TEXT_DEFAULTS: Record<string, string> = (() => {
+  const out: Record<string, string> = {};
+  HERO_SLIDES.forEach((slide, i) => {
+    const n = i + 1;
+    out[`hero.${n}.accent`] = slide.accent;
+    out[`hero.${n}.title`] = slide.title;
+    out[`hero.${n}.description`] = slide.description;
+  });
+  return out;
+})();

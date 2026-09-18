@@ -9,11 +9,12 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
-import { Loader2, Lock, Plus, Trash2 } from 'lucide-react';
+import { Lock, Plus, Trash2 } from 'lucide-react';
 import { Button, buttonVariants } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { ImagePicker } from './ImagePicker';
+import { SkeletonMedia } from './Skeleton';
 import {
   SITE_IMAGES_DEFAULTS,
   SERVICE_IMAGE_BY_ID,
@@ -221,11 +222,7 @@ export function MediaPanel() {
   }
 
   if (auth === 'loading') {
-    return (
-      <div className="col-span-4 col-start-2 row-start-2 row-span-6 flex min-h-0 items-center justify-center rounded-xl border border-border bg-card">
-        <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
-      </div>
-    );
+    return <SkeletonMedia groups={4} />;
   }
 
   if (auth !== 'ok') {

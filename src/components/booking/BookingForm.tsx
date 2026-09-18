@@ -12,10 +12,11 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { ServiceItem } from '@/types';
 import { CalendarIcon, Clock, Loader2 } from 'lucide-react';
-import { useSiteContent } from '../../hooks/useSiteContent';
+import { useSiteContent, staticBranches } from '../../hooks/useSiteContent';
 import { DatePickerField } from './DatePickerField';
 import { TimeSlotDropdown } from './TimeSlotDropdown';
 import { generateTimeSlots, formatDisplayDate, todayISO } from '@/lib/bookingTime';
+import { stylistBranch } from '@/data/salonData';
 
 interface BookingFormProps {
   preSelectedService?: ServiceItem | null;
@@ -34,7 +35,9 @@ export const BookingForm: React.FC<BookingFormProps> = ({
   onSuccess,
   onDone,
 }) => {
-  const { services, stylists } = useSiteContent();
+  const { services, stylists, branches } = useSiteContent();
+  // Live branches from the store; static LOCATIONS until the fetch resolves.
+  const branchList = branches.length > 0 ? branches : staticBranches();
 
   const [step, setStep] = useState<'form' | 'submitting' | 'success'>('form');
   const [submitError, setSubmitError] = useState('');
@@ -54,8 +57,19 @@ export const BookingForm: React.FC<BookingFormProps> = ({
   const [takenSlots, setTakenSlots] = useState<Set<string>>(new Set());
   const [availLoading, setAvailLoading] = useState(false);
 
+  const [selectedBranch, setSelectedBranch] = useState<string>(
+    branchList[0]?.slug ?? ''
+  );
+
+  // Stylists for the chosen branch (each branch has its own team).
+  const branchStylists = useMemo(
+    () => stylists.filter((s) => stylistBranch(s) === selectedBranch),
+    [stylists, selectedBranch]
+  );
+  const stylistOptions = branchStylists.length > 0 ? branchStylists : stylists;
+
   const currentService = services.find((service) => service.id === selectedServiceId) || services[0];
-  const currentStylist = stylists.find((stylist) => stylist.id === selectedStylistId) || stylists[0];
+  const currentStylist = stylists.find((stylist) => stylist.id === selectedStylistId) || stylistOptions[0];
 
   // Slots for the selected weekday, minus already-taken times.
   const allSlots = useMemo(
@@ -71,6 +85,12 @@ export const BookingForm: React.FC<BookingFormProps> = ({
   useEffect(() => {
     if (preSelectedService) setSelectedServiceId(preSelectedService.id);
   }, [preSelectedService]);
+
+  // Switching branch re-selects that branch's first stylist.
+  useEffect(() => {
+    setSelectedStylistId(stylistOptions[0]?.id ?? '');
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedBranch, stylists]);
 
   // Fetch availability whenever date or stylist changes.
   useEffect(() => {
@@ -117,6 +137,7 @@ export const BookingForm: React.FC<BookingFormProps> = ({
           serviceId: currentService.id,
           serviceName: currentService.name,
           stylistName: currentStylist.name,
+          branch: selectedBranch,
           date: bookingDate,
           time: bookingTime,
           clientName: name,
@@ -157,6 +178,10 @@ export const BookingForm: React.FC<BookingFormProps> = ({
             <span className="font-bold text-black">{currentService.name}</span>
           </div>
           <div className="flex justify-between">
+            <span className="text-neutral-500">Branch:</span>
+            <span className="font-bold text-black">{selectedBranch.toUpperCase()}</span>
+          </div>
+          <div className="flex justify-between">
             <span className="text-neutral-500">Stylist:</span>
             <span className="font-bold text-black">{currentStylist.name}</span>
           </div>
@@ -187,6 +212,24 @@ export const BookingForm: React.FC<BookingFormProps> = ({
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4 text-xs">
+      {/* Branch Selection */}
+      <div>
+        <label className="block font-bold tracking-wider text-black uppercase mb-1.5">
+          Select Salon / Branch
+        </label>
+        <select
+          value={selectedBranch}
+          onChange={(e) => setSelectedBranch(e.target.value)}
+          className={inputCls}
+        >
+          {branchList.map((location) => (
+            <option key={location.slug} value={location.slug}>
+              {location.city} — {location.address}
+            </option>
+          ))}
+        </select>
+      </div>
+
       {/* Service Selection */}
       <div>
         <label className="block font-bold tracking-wider text-black uppercase mb-1.5">
@@ -215,7 +258,7 @@ export const BookingForm: React.FC<BookingFormProps> = ({
           onChange={(e) => setSelectedStylistId(e.target.value)}
           className={inputCls}
         >
-          {stylists.map((stylist) => (
+          {stylistOptions.map((stylist) => (
             <option key={stylist.id} value={stylist.id}>
               {stylist.name} ({stylist.role})
             </option>

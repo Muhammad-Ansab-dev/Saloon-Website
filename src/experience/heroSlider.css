@@ -14,15 +14,7 @@
   left: 50%;
   margin-left: -50vw;
   background: #000;
-  opacity: 0;
-  transition: opacity 1.5s ease-in;
-  pointer-events: none;
   user-select: none;
-}
-
-.vfx-hero.loaded {
-  opacity: 1;
-  pointer-events: auto;
 }
 
 /* ── Fullscreen backgrounds (stacked, crossfade) ── */

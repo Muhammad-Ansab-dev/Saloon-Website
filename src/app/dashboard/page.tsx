@@ -10,6 +10,7 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import {
   Search,
   Settings,
@@ -33,9 +34,11 @@ import { StylistsPanel } from '@/components/dashboard/StylistsPanel';
 import { ServicesPanel } from '@/components/dashboard/ServicesPanel';
 import { BookingTab } from '@/components/dashboard/BookingTab';
 import { OverviewTab } from '@/components/dashboard/OverviewTab';
+import { BranchesTab } from '@/components/dashboard/BranchesTab';
+import { ContentPanel } from '@/components/dashboard/ContentPanel';
 
 // ── Dashboard state (real data lives in OverviewTab / BookingTab) ─────────
-type DashboardTab = 'overview' | 'bookings' | 'services' | 'stylists' | 'media';
+type DashboardTab = 'overview' | 'bookings' | 'services' | 'stylists' | 'media' | 'branches' | 'content';
 
 const NAV: { id: DashboardTab; label: string; enabled: boolean }[] = [
   { id: 'overview', label: 'Overview', enabled: true },
@@ -43,6 +46,10 @@ const NAV: { id: DashboardTab; label: string; enabled: boolean }[] = [
   { id: 'services', label: 'Services', enabled: true },
   { id: 'stylists', label: 'Stylists', enabled: true },
   { id: 'media', label: 'Media', enabled: true },
+  { id: 'branches', label: 'Branches', enabled: true },
+  // Content editing is superadmin-only — branch managers never reach this
+  // page (middleware bounces them to their own branch console).
+  { id: 'content', label: 'Content', enabled: true },
 ];
 
 const TAB_LABEL: Record<DashboardTab, string> = {
@@ -51,10 +58,18 @@ const TAB_LABEL: Record<DashboardTab, string> = {
   services: 'Services',
   stylists: 'Stylists',
   media: 'Media Library',
+  branches: 'Branches',
+  content: 'Content Editor',
 };
 
 export default function DashboardPage() {
   const [tab, setTab] = useState<DashboardTab>('overview');
+  const router = useRouter();
+
+  const signOut = async () => {
+    await fetch('/api/auth/login', { method: 'DELETE' });
+    router.replace('/dashboard/login');
+  };
   return (
     <div className="dark h-screen overflow-hidden bg-background text-foreground">
       {/* Fixed left rail — always visible */}
@@ -111,7 +126,7 @@ export default function DashboardPage() {
               <DropdownMenuItem><User className="w-3.5 h-3.5" /> Profile</DropdownMenuItem>
               <DropdownMenuItem><Settings className="w-3.5 h-3.5" /> Settings</DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem className="text-destructive"><LogOut className="w-3.5 h-3.5" /> Sign out</DropdownMenuItem>
+              <DropdownMenuItem className="text-destructive" onClick={signOut}><LogOut className="w-3.5 h-3.5" /> Sign out</DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
@@ -150,6 +165,14 @@ export default function DashboardPage() {
           ) : tab === 'media' ? (
             <div className="flex-1 min-h-0 overflow-y-auto">
               <MediaPanel />
+            </div>
+          ) : tab === 'branches' ? (
+            <div className="flex-1 min-h-0">
+              <BranchesTab />
+            </div>
+          ) : tab === 'content' ? (
+            <div className="flex-1 min-h-0 overflow-y-auto">
+              <ContentPanel />
             </div>
           ) : (
             <div className="flex-1 min-h-0 flex flex-col">

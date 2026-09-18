@@ -13,6 +13,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { Boxes, Database, Loader2, Pencil, Plus, Trash2, X } from 'lucide-react';
 import Image from 'next/image';
 import { ImagePicker } from './ImagePicker';
+import { SkeletonTableCard } from './Skeleton';
 
 type LoadState = 'loading' | 'ready' | 'error';
 
@@ -581,9 +582,7 @@ export function ServicesPanel() {
       {loadState !== 'error' && (
         <div className="flex-1 min-h-0 overflow-hidden bg-card border border-border">
           {loadState === 'loading' ? (
-            <div className="flex items-center justify-center gap-2 py-12 text-sm text-muted-foreground">
-              <Loader2 className="w-4 h-4 animate-spin" /> Loading services&hellip;
-            </div>
+            <SkeletonTableCard rows={8} avatar />
           ) : services.length === 0 ? (
             <div className="py-12 px-6 text-center">
               <p className="text-xs text-muted-foreground">No services yet — add the first one.</p>

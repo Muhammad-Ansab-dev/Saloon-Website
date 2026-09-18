@@ -1,14 +1,16 @@
 'use client';
 // ---------------------------------------------------------------------------
 // AddBookingModal — dashboard form for creating a booking manually.
-// Uses the same public booking endpoint and payload as the customer booking form.
+// Uses the same public booking endpoint and payload as the customer booking
+// form. Time slots already taken (per the selected date + stylist) are
+// fetched from /api/availability and hidden from the dropdown.
 // Styled to match the other dashboard modals (black panel, dark inputs).
 // ---------------------------------------------------------------------------
 import React, { useEffect, useMemo, useState } from 'react';
 import { Loader2 } from 'lucide-react';
 import { DateField } from '@/components/dashboard/DateField';
 import { generateTimeSlots } from '@/lib/bookingTime';
-import { useSiteContent } from '@/hooks/useSiteContent';
+import { useSiteContent, staticBranches } from '@/hooks/useSiteContent';
 
 export type CreatedBooking = {
   id: string;
@@ -17,6 +19,7 @@ export type CreatedBooking = {
   clientPhone?: string;
   serviceName: string;
   stylistName?: string;
+  branch?: string;
   date: string;
   time: string;
   notes?: string;
@@ -28,36 +31,67 @@ interface AddBookingModalProps {
   open: boolean;
   onClose: () => void;
   onCreated: (booking: CreatedBooking) => void;
+  /** Branch this modal is opened from (branch console) — pre-selected + locked. */
+  branch?: string;
 }
 
 const labelCls = 'block text-[10px] font-bold uppercase tracking-[0.2em] text-neutral-500 mb-1.5';
 const fieldCls =
   'w-full rounded-lg border border-neutral-700 bg-neutral-900 px-3 py-2 text-sm text-white outline-none transition-colors focus:border-white';
 
-export function AddBookingModal({ open, onClose, onCreated }: AddBookingModalProps) {
-  const { services, stylists } = useSiteContent();
+export function AddBookingModal({ open, onClose, onCreated, branch }: AddBookingModalProps) {
+  const { services, stylists, branches } = useSiteContent();
+  // Live branches from the store; static LOCATIONS until the fetch resolves.
+  const branchList = branches.length > 0 ? branches : staticBranches();
   const [clientName, setClientName] = useState('');
   const [clientEmail, setClientEmail] = useState('');
   const [clientPhone, setClientPhone] = useState('');
   const [serviceId, setServiceId] = useState('');
   const [stylistName, setStylistName] = useState('');
+  const [branchSel, setBranchSel] = useState<string>(branch ?? '');
   const [date, setDate] = useState('');
   const [time, setTime] = useState('');
   const [notes, setNotes] = useState('');
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
+  const [takenSlots, setTakenSlots] = useState<Set<string>>(new Set());
+  const [availLoading, setAvailLoading] = useState(false);
 
   useEffect(() => {
     if (!open) return;
     setClientName(''); setClientEmail(''); setClientPhone('');
     setServiceId(services[0]?.id || ''); setStylistName(stylists[0]?.name || ''); setDate(''); setTime('');
-    setNotes(''); setError(''); setSaving(false);
+    setBranchSel(branch ?? ''); setNotes(''); setError(''); setSaving(false); setTakenSlots(new Set());
   }, [open]);
 
   const slots = useMemo(
     () => (date ? generateTimeSlots(new Date(date + 'T12:00:00').getDay()) : []),
     [date]
   );
+
+  // Hide time slots that are already booked for the chosen date + stylist.
+  const availableSlots = useMemo(
+    () => slots.filter((slot) => !takenSlots.has(slot)),
+    [slots, takenSlots]
+  );
+
+  useEffect(() => {
+    if (!date || !stylistName) { setTakenSlots(new Set()); return; }
+    let cancelled = false;
+    setAvailLoading(true);
+    fetch(`/api/availability?date=${date}&stylist=${encodeURIComponent(stylistName)}`)
+      .then((r) => (r.ok ? r.json() : Promise.reject()))
+      .then((data: { taken: string[] }) => {
+        if (!cancelled) setTakenSlots(new Set(data.taken));
+      })
+      .catch(() => {
+        if (!cancelled) setTakenSlots(new Set());
+      })
+      .finally(() => {
+        if (!cancelled) setAvailLoading(false);
+      });
+    return () => { cancelled = true; };
+  }, [date, stylistName]);
 
   if (!open) return null;
 
@@ -84,6 +118,7 @@ export function AddBookingModal({ open, onClose, onCreated }: AddBookingModalPro
           serviceId,
           serviceName: service?.name || '',
           stylistName,
+          branch: branchSel || undefined,
           date,
           time,
           notes,
@@ -99,10 +134,11 @@ export function AddBookingModal({ open, onClose, onCreated }: AddBookingModalPro
         clientPhone: clientPhone.trim(),
         serviceName: service?.name || '',
         stylistName: stylistName.trim(),
+        branch: branchSel || undefined,
         date,
         time,
         notes: notes.trim(),
-        status: 'confirmed',
+        status: 'pending',
         createdAt: new Date().toISOString(),
       });
       onClose();
@@ -163,6 +199,21 @@ export function AddBookingModal({ open, onClose, onCreated }: AddBookingModalPro
           </div>
 
           <div>
+            <label className={labelCls}>Branch</label>
+            <select
+              value={branchSel}
+              onChange={(e) => { setBranchSel(e.target.value); setStylistName(''); }}
+              disabled={Boolean(branch)}
+              className={`${fieldCls} cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed`}
+            >
+              <option value="">Global / unspecified</option>
+              {branchList.map((l) => (
+                <option key={l.slug} value={l.slug}>{l.city}</option>
+              ))}
+            </select>
+          </div>
+
+          <div>
             <label className={labelCls}>Service</label>
             <select value={serviceId} onChange={(e) => setServiceId(e.target.value)} className={`${fieldCls} cursor-pointer`}>
               <option value="">Select a service…</option>
@@ -172,7 +223,7 @@ export function AddBookingModal({ open, onClose, onCreated }: AddBookingModalPro
 
           <div>
             <label className={labelCls}>Stylist</label>
-            <select value={stylistName} onChange={(e) => setStylistName(e.target.value)} className={`${fieldCls} cursor-pointer`}>
+            <select value={stylistName} onChange={(e) => { setStylistName(e.target.value); setTime(''); }} className={`${fieldCls} cursor-pointer`}>
               <option value="">Unassigned</option>
               {stylists.map((s) => <option key={s.id} value={s.name}>{s.name}</option>)}
             </select>
@@ -184,15 +235,18 @@ export function AddBookingModal({ open, onClose, onCreated }: AddBookingModalPro
               <DateField value={date} onChange={(iso) => { setDate(iso); setTime(''); }} placeholder="Pick a date" />
             </div>
             <div>
-              <label className={labelCls}>Time</label>
+              <label className={`${labelCls} flex items-center gap-1.5`}>
+                Time
+                {availLoading && <Loader2 className="w-3 h-3 animate-spin" />}
+              </label>
               <select
                 value={time}
                 onChange={(e) => setTime(e.target.value)}
-                disabled={!date}
+                disabled={!date || availLoading}
                 className={`${fieldCls} cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed`}
               >
-                <option value="">{date ? 'Select a time…' : 'Pick a date first'}</option>
-                {slots.map((s) => <option key={s} value={s}>{s}</option>)}
+                <option value="">{!date ? 'Pick a date first' : availLoading ? 'Checking availability…' : availableSlots.length === 0 ? 'No slots available' : 'Select a time…'}</option>
+                {availableSlots.map((s) => <option key={s} value={s}>{s}</option>)}
               </select>
             </div>
           </div>

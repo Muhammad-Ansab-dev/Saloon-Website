@@ -4,12 +4,11 @@
 // username + password to POST /api/auth/login, which sets an httpOnly session
 // cookie, then redirects straight back into the dashboard control center.
 // ---------------------------------------------------------------------------
-import React, { Suspense, useState } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import React, { useState } from 'react';
+import { useRouter } from 'next/navigation';
 
 function LoginForm() {
   const router = useRouter();
-  const params = useSearchParams();
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -31,8 +30,12 @@ function LoginForm() {
         setLoading(false);
         return;
       }
-      const next = params.get('next');
-      router.replace(next && next.startsWith('/dashboard') ? next : '/dashboard');
+      const data = await res.json().catch(() => ({}));
+      // The API returns the canonical landing page for the account that
+      // logged in: /dashboard for the superadmin, /dashboard/branch/<slug>
+      // for a branch manager. Trust it over the pre-login ?next= target.
+      const redirect = typeof data.redirect === 'string' ? data.redirect : '/dashboard';
+      router.replace(redirect);
     } catch {
       setError('Network error — try again.');
       setLoading(false);
@@ -101,9 +104,5 @@ function LoginForm() {
 }
 
 export default function DashboardLoginPage() {
-  return (
-    <Suspense>
-      <LoginForm />
-    </Suspense>
-  );
+  return <LoginForm />;
 }

@@ -6,6 +6,7 @@
 //   generateTimeSlots   → 30-min slot strings for a given weekday
 //   toISODate           Date → "YYYY-MM-DD" (local time)
 //   formatDisplayDate   "YYYY-MM-DD" → "September 15, 2026"
+//   formatTime12h       "HH:MM" → "9:30 AM" (for emails / displays)
 //   todayISO()          today as "YYYY-MM-DD" (evaluated on call, so a
 //                       long-lived server process never freezes the date)
 // ─────────────────────────────────────────────────────────────
@@ -49,6 +50,19 @@ export function formatDisplayDate(iso: string): string {
     day: 'numeric',
     year: 'numeric',
   });
+}
+
+/** Convert a 24h "HH:MM" slot to 12-hour form with AM/PM ("09:30" → "9:30 AM"). */
+export function formatTime12h(hhmm: string): string {
+  if (!hhmm) return hhmm;
+  const [hRaw, mRaw] = hhmm.split(':');
+  const h = Number(hRaw);
+  const m = Number(mRaw);
+  if (Number.isNaN(h)) return hhmm;
+  const period = h >= 12 ? 'PM' : 'AM';
+  const hour12 = ((h + 11) % 12) + 1;
+  const minute = Number.isNaN(m) ? 0 : m;
+  return `${hour12}:${String(minute).padStart(2, '0')} ${period}`;
 }
 
 /** Today's date as "YYYY-MM-DD" (call it; never cache the result). */

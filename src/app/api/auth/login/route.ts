@@ -6,11 +6,12 @@
 // ─────────────────────────────────────────────────────────────
 import { NextResponse } from 'next/server';
 import {
+  authenticate,
   clearSessionCookie,
   createSessionToken,
   serializeSessionCookie,
-  validateCredentials,
 } from '@/lib/auth';
+import { getCollection } from '@/lib/store';
 
 const RATE_LIMIT_WINDOW_MS = 60_000;
 const RATE_LIMIT_MAX_ATTEMPTS = 8;
@@ -60,12 +61,34 @@ export async function POST(request: Request) {
   const username = body.username?.trim() ?? '';
   const password = body.password ?? '';
 
-  if (!(await validateCredentials(username, password))) {
+  // Branch accounts created in the store (Branches tab) are checked
+  // alongside the env-var accounts. If the store is unreachable we fall
+  // back to env-only so the original accounts still work.
+  let storeBranches: { slug: string; username: string; password: string }[] = [];
+  try {
+    const rows = (await getCollection('branches')) as unknown as {
+      slug: string;
+      managerUsername: string;
+      managerPassword: string;
+    }[];
+    storeBranches = rows
+      .filter((r) => r.slug && r.managerUsername)
+      .map((r) => ({ slug: r.slug, username: r.managerUsername, password: r.managerPassword }));
+  } catch {
+    // Store down → env-var accounts only.
+  }
+
+  // Resolve which account matched so the response can point the browser
+  // at the right dashboard: superadmin → /dashboard, branch manager → the
+  // branch console for that branch.
+  const claim = await authenticate(username, password, storeBranches);
+  if (!claim) {
     return NextResponse.json({ error: 'Invalid username or password' }, { status: 401 });
   }
 
-  const token = await createSessionToken();
-  const res = NextResponse.json({ ok: true });
+  const token = await createSessionToken(claim);
+  const redirect = claim.role === 'branch' ? `/dashboard/branch/${claim.branch}` : '/dashboard';
+  const res = NextResponse.json({ ok: true, redirect });
   res.headers.set('Set-Cookie', serializeSessionCookie(token));
   return res;
 }

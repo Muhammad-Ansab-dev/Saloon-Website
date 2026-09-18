@@ -6,7 +6,6 @@
 // contact/message form. Cards use a plain fade-in (motion whileInView).
 // Rendered by the /contact route.
 import React, { useState } from 'react';
-import { LOCATIONS } from '@/data/salonData';
 import {
   ExternalLink,
   Mail,
@@ -18,7 +17,7 @@ import {
 } from 'lucide-react';
 import { motion } from 'motion/react';
 import { BookingForm } from '../../components/booking/BookingForm';
-import { useSiteContent } from '@/hooks/useSiteContent';
+import { useSiteContent, staticBranches } from '@/hooks/useSiteContent';
 
 const BRANCH_IMAGES = ['https://res.cloudinary.com/dittrfbja/image/upload/v1789650838/hair-salon/visitus.webp', 'https://res.cloudinary.com/dittrfbja/image/upload/v1789650836/hair-salon/servicemenu.webp'];
 
@@ -30,7 +29,10 @@ const FADE = {
 };
 
 export const ContactPage: React.FC = () => {
-  const { images } = useSiteContent();
+  const { images, branches } = useSiteContent();
+  // Live branches from the store; falls back to the static LOCATIONS until the
+  // fetch resolves (and if the admin ever deletes every branch).
+  const branchList = branches.length > 0 ? branches : staticBranches();
   const [form, setForm] = useState({ name: '', email: '', subject: '', message: '' });
   const [submitted, setSubmitted] = useState(false);
   // Remounts BookingForm after a completed booking so a new one can be made.
@@ -68,7 +70,7 @@ export const ContactPage: React.FC = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-24">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8">
           {/* ── Card 1 & 2: Studio branches — full width, info left / image right ── */}
-          {LOCATIONS.map((loc, idx) => (
+          {branchList.map((loc, idx) => (
             <motion.div
               key={loc.city}
               {...FADE}

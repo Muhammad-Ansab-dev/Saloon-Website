@@ -14,9 +14,12 @@ interface DateFieldProps {
   value: string; // "YYYY-MM-DD" or "" when unset
   onChange: (iso: string) => void;
   placeholder?: string;
+  label?: string;
+  /** Inline mode renders the calendar grid directly (no trigger button), used by the Custom range picker. */
+  inline?: boolean;
 }
 
-export const DateField: React.FC<DateFieldProps> = ({ value, onChange, placeholder = 'Pick a date' }) => {
+export const DateField: React.FC<DateFieldProps> = ({ value, onChange, placeholder = 'Pick a date', label, inline = false }) => {
   const [open, setOpen] = useState(false);
   const base = value || todayISO();
   const [viewYear, setViewYear] = useState(() => new Date(base + 'T12:00:00').getFullYear());
@@ -24,7 +27,7 @@ export const DateField: React.FC<DateFieldProps> = ({ value, onChange, placehold
   const wrapRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (!open) return;
+    if (!open || inline) return;
     const onMouseDown = (e: MouseEvent) => {
       if (wrapRef.current && !wrapRef.current.contains(e.target as Node)) setOpen(false);
     };
@@ -39,25 +42,30 @@ export const DateField: React.FC<DateFieldProps> = ({ value, onChange, placehold
   };
 
   return (
-    <div className="relative" ref={wrapRef}>
-      <button
-        type="button"
-        onClick={() => setOpen((o) => !o)}
-        className="h-8 px-3 rounded-md border border-border bg-card text-[11px] font-medium text-foreground flex items-center gap-2 focus:outline-none focus:border-foreground/40 cursor-pointer"
-      >
-        <span className={value ? '' : 'text-muted-foreground'}>{value ? formatDisplayDate(value) : placeholder}</span>
-        {value ? (
-          <X
-            className="w-3 h-3 opacity-60 hover:opacity-100"
-            onClick={(e) => { e.stopPropagation(); onChange(''); }}
-          />
-        ) : (
-          <CalendarIcon className="w-3 h-3 opacity-60" />
-        )}
-      </button>
+    <div className={inline ? undefined : 'relative'} ref={wrapRef}>
+      {!inline && (
+        <button
+          type="button"
+          onClick={() => setOpen((o) => !o)}
+          className="h-8 px-3 rounded-md border border-border bg-card text-[11px] font-medium text-foreground flex items-center gap-2 focus:outline-none focus:border-foreground/40 cursor-pointer"
+        >
+          <span className={value ? '' : 'text-muted-foreground'}>{value ? formatDisplayDate(value) : placeholder}</span>
+          {value ? (
+            <X
+              className="w-3 h-3 opacity-60 hover:opacity-100"
+              onClick={(e) => { e.stopPropagation(); onChange(''); }}
+            />
+          ) : (
+            <CalendarIcon className="w-3 h-3 opacity-60" />
+          )}
+        </button>
+      )}
 
-      {open && (
-        <div className="absolute right-0 top-full mt-2 z-30 w-64 rounded-lg border border-border bg-card shadow-xl p-3">
+      {(inline || open) && (
+        <div className={inline ? 'w-64 rounded-lg border border-border bg-card shadow-xl p-3' : 'absolute right-0 top-full mt-2 z-[60] w-64 rounded-lg border border-border bg-card shadow-xl p-3'}>
+          {label && (
+            <span className="block mb-2 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">{label}</span>
+          )}
           <div className="flex items-center justify-between mb-2">
             <button type="button" onClick={() => step(-1)} className="p-1 text-muted-foreground hover:text-foreground cursor-pointer" aria-label="Previous month">
               <ChevronLeft className="w-4 h-4" />

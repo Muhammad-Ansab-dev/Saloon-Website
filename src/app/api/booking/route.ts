@@ -25,6 +25,8 @@ export async function POST(request: Request) {
   const phone = typeof body.clientPhone === 'string' ? body.clientPhone.trim() : '';
   const notes = typeof body.notes === 'string' ? body.notes.trim() : '';
   const serviceId = typeof body.serviceId === 'string' ? body.serviceId.trim() : '';
+  const branch =
+    typeof body.branch === 'string' ? body.branch.trim().toLowerCase() : '';
   const createdAt = typeof body.createdAt === 'string' ? body.createdAt : new Date().toISOString();
 
   if (!name || !email || !serviceName || !date || !time) {
@@ -61,6 +63,7 @@ export async function POST(request: Request) {
     serviceId,
     serviceName,
     stylistName,
+    branch,
     date,
     time,
     clientName: name,

@@ -4,9 +4,9 @@
 // Fetches from /api/admin/bookings (DB) and computes KPIs, charts,
 // and renders the full inbox table with status edits + delete.
 // ---------------------------------------------------------------------------
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
-  CalendarRange, CheckCircle2, CheckCheck, Plus, Trash2, Loader2, Search, XCircle,
+  CalendarRange, CheckCircle2, CheckCheck, Plus, Trash2, Loader2, Search, XCircle, RefreshCw,
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardAction } from '@/components/ui/card';
@@ -16,6 +16,7 @@ import { DateField } from '@/components/dashboard/DateField';
 import { AddBookingModal } from '@/components/dashboard/AddBookingModal';
 import { periodWindow } from '@/lib/dateWindows';
 import { todayISO } from '@/lib/bookingTime';
+import { SkeletonDonut, SkeletonKpi, SkeletonLine, SkeletonPanel, SkeletonTableCard } from '@/components/dashboard/Skeleton';
 import {
   Area, AreaChart, CartesianGrid, Cell, Line, LineChart,
   Pie, PieChart, XAxis, YAxis, Tooltip,
@@ -28,6 +29,7 @@ type BookingRow = {
   clientPhone?: string;
   serviceName: string;
   stylistName?: string;
+  branch?: string;
   date: string;
   time: string;
   notes?: string;
@@ -36,16 +38,18 @@ type BookingRow = {
 };
 
 type View = 'analytics' | 'list' | 'today';
-type BookingPeriod = 'total' | 'daily' | 'weekly' | 'monthly' | 'yearly';
+type BookingPeriod = 'total' | 'daily' | 'weekly' | 'monthly' | 'yearly' | 'custom';
 const PERIOD_LABEL: Record<BookingPeriod, string> = {
   total: 'all time · aggregated',
   daily: 'per day · last 30 days',
   weekly: 'per week · last 8 weeks',
   monthly: 'per month · this year to date',
   yearly: 'per year · this calendar year',
+  custom: 'per day · custom date range',
 };
 
 type ListFilter = 'all' | 'today' | 'daily' | 'weekly' | 'monthly' | 'yearly' | 'custom';
+type ListStatusFilter = 'all' | BookingRow['status'];
 const LIST_FILTER_OPTIONS: { value: ListFilter; label: string }[] = [
   { value: 'all', label: 'All dates' },
   { value: 'today', label: 'Today' },
@@ -57,6 +61,7 @@ const LIST_FILTER_OPTIONS: { value: ListFilter; label: string }[] = [
 ];
 
 function trendKey(date: string, p: BookingPeriod): string {
+  if (p === 'custom') return date;
   if (p === 'total' || p === 'monthly') return date.slice(0, 7);
   if (p === 'daily') return date;
   if (p === 'weekly') {
@@ -68,7 +73,7 @@ function trendKey(date: string, p: BookingPeriod): string {
 }
 
 function trendLabel(key: string, p: BookingPeriod): string {
-  if (p === 'daily' || p === 'weekly') {
+  if (p === 'custom' || p === 'daily' || p === 'weekly') {
     return new Date(key + 'T00:00:00Z').toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
   }
   if (p === 'total' || p === 'monthly') return new Date(key + '-01T00:00:00Z').toLocaleDateString('en-US', { month: 'short' });
@@ -108,9 +113,10 @@ function fmt(n: number) { return n.toLocaleString('en-US'); }
 
 const PAGE_SIZE = 10;
 
-export function BookingTab() {
+export function BookingTab({ branch }: { branch?: string }) {
   const [bookings, setBookings] = useState<BookingRow[]>([]);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState('');
   const [view, setView] = useState<View>('analytics');
   const [period, setPeriod] = useState<BookingPeriod>('total');
@@ -118,23 +124,48 @@ export function BookingTab() {
   const [search, setSearch] = useState('');
   const [dateFilter, setDateFilter] = useState<ListFilter>('all');
   const [customDate, setCustomDate] = useState('');
+  const [listStatus, setListStatus] = useState<ListStatusFilter>('all');
   const [deleteTarget, setDeleteTarget] = useState<BookingRow | null>(null);
   const [addOpen, setAddOpen] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [trendStatus, setTrendStatus] = useState<'all' | BookingRow['status']>('all');
+  const [customFrom, setCustomFrom] = useState('');
+  const [customTo, setCustomTo] = useState('');
+  const [customOpen, setCustomOpen] = useState(false);
+  const customWrapRef = useRef<HTMLDivElement>(null);
 
-  const load = useCallback(async () => {
-    setLoading(true); setError('');
+  useEffect(() => {
+    if (!customOpen) return;
+    const onMouseDown = (e: MouseEvent) => {
+      if (customWrapRef.current && !customWrapRef.current.contains(e.target as Node)) setCustomOpen(false);
+    };
+    document.addEventListener('mousedown', onMouseDown);
+    return () => document.removeEventListener('mousedown', onMouseDown);
+  }, [customOpen]);
+
+  const load = useCallback(async (silent = false) => {
+    if (silent) setRefreshing(true);
+    else { setLoading(true); setError(''); }
     try {
-      const res = await fetch('/api/admin/bookings');
+      const res = await fetch('/api/admin/bookings', { cache: 'no-store' });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const data = await res.json();
       setBookings(Array.isArray(data.items) ? data.items : []);
-    } catch { setError('Could not load bookings — are you signed in?'); }
-    finally { setLoading(false); }
+    } catch {
+      if (!silent) setError('Could not load bookings — are you signed in?');
+    } finally {
+      if (silent) setRefreshing(false);
+      else setLoading(false);
+    }
   }, []);
   useEffect(() => { load(); }, [load]);
-  useEffect(() => { setPage(1); }, [view, search, dateFilter, customDate]);
+  useEffect(() => { setPage(1); }, [view, search, dateFilter, customDate, listStatus]);
+
+  // When opened from a branch console, restrict to that branch's bookings.
+  const scopedBookings = useMemo(
+    () => (branch ? bookings.filter((b) => b.branch?.toLowerCase() === branch.toLowerCase()) : bookings),
+    [bookings, branch]
+  );
 
   // ── Compute analytics ──────────────────────────────────────────────────
   const stats = useMemo(() => {
@@ -142,14 +173,29 @@ export function BookingTab() {
 
     // Window anchor per period (start/end date keys of the visible range).
     const thisMonday = now - ((new Date(now).getUTCDay() + 6) % 7) * 86400000;
-    const win = periodWindow(period, now);
-    const inWindow = (date: string) => (!win || (date >= win.start && date <= win.end));
+    const win = period === 'custom'
+      ? (customFrom || customTo ? { start: customFrom || '0000-01-01', end: customTo || '9999-12-31' } : null)
+      : periodWindow(period, now);
+    const inWindow = (date: string) => {
+      if (period === 'custom' && !win) return false;
+      return (!win || (date >= win.start && date <= win.end));
+    };
 
     // Bucket keys for the period.
     const allKeys: string[] = [];
     if (period === 'total') {
-      const months = new Set(bookings.map((b) => b.date.slice(0, 7)));
+      const months = new Set(scopedBookings.map((b) => b.date.slice(0, 7)));
       allKeys.push(...[...months].sort());
+    } else if (period === 'custom') {
+      if (customFrom || customTo) {
+        const from = customFrom || scopedBookings.map((b) => b.date).sort()[0] || todayISO();
+        const to = customTo || todayISO();
+        const d = new Date(from + 'T00:00:00Z');
+        while (d.toISOString().split('T')[0] <= to) {
+          allKeys.push(d.toISOString().split('T')[0]);
+          d.setUTCDate(d.getUTCDate() + 1);
+        }
+      }
     } else if (period === 'daily') {
       for (let i = 29; i >= 0; i--) allKeys.push(new Date(now - i * 86400000).toISOString().split('T')[0]);
     } else if (period === 'weekly') {
@@ -158,13 +204,13 @@ export function BookingTab() {
       const d = new Date(now);
       for (let m = 0; m <= d.getUTCMonth(); m++) allKeys.push(`${d.getUTCFullYear()}-${String(m + 1).padStart(2, '0')}`);
     } else {
-      const years = new Set(bookings.map((b) => b.date.slice(0, 4)));
+      const years = new Set(scopedBookings.map((b) => b.date.slice(0, 4)));
       allKeys.push(...[...years].sort());
     }
 
     // Per-bucket counts by status (whole window, before status filter).
     const bucketCounts = new Map<string, { total: number; pending: number; confirmed: number; completed: number; cancelled: number }>();
-    for (const b of bookings) {
+    for (const b of scopedBookings) {
       if (!inWindow(b.date)) continue;
       const k = trendKey(b.date, period);
       const e = bucketCounts.get(k) ?? { total: 0, pending: 0, confirmed: 0, completed: 0, cancelled: 0 };
@@ -205,7 +251,7 @@ export function BookingTab() {
     ];
 
     return { total, statusCounts, statusData, bucketed, bookingsTrend };
-  }, [bookings, period, trendStatus]);
+  }, [scopedBookings, period, trendStatus, customFrom, customTo]);
 
   // ── List filtering (search + date preset, All/Today Bookings views) ─────
   const filteredBookings = useMemo(() => {
@@ -215,7 +261,7 @@ export function BookingTab() {
         ? periodWindow(activeFilter)
         : null;
     const q = search.trim().toLowerCase();
-    return bookings.filter((b) => {
+    return scopedBookings.filter((b) => {
       if (activeFilter === 'today') {
         if (b.date !== todayISO()) return false;
       } else if (activeFilter === 'custom') {
@@ -227,9 +273,10 @@ export function BookingTab() {
         const hay = `${b.clientName} ${b.clientEmail} ${b.serviceName} ${b.stylistName || ''} ${b.date} ${b.time}`.toLowerCase();
         if (!hay.includes(q)) return false;
       }
+      if (listStatus !== 'all' && b.status !== listStatus) return false;
       return true;
     });
-  }, [bookings, search, dateFilter, customDate, view]);
+  }, [scopedBookings, search, dateFilter, customDate, view, listStatus]);
 
   // ── Status update / delete ─────────────────────────────────────────────
   const updateStatus = async (id: string, status: BookingRow['status']) => {
@@ -248,11 +295,30 @@ export function BookingTab() {
     }
   };
 
-  if (loading) return (
-    <div className="flex items-center justify-center gap-2 py-20 text-sm text-muted-foreground">
-      <Loader2 className="w-4 h-4 animate-spin" /> Loading bookings…
-    </div>
-  );
+  if (loading) {
+    if (view === 'analytics') {
+      return (
+        <div className="grid grid-cols-4 grid-rows-[repeat(6,minmax(0,1fr))] gap-4 flex-1 min-h-0">
+          <SkeletonKpi className="col-start-1 row-start-1 row-span-2" />
+          <SkeletonKpi className="col-start-2 row-start-1 row-span-2" />
+          <SkeletonKpi className="col-start-3 row-start-1 row-span-2" />
+          <SkeletonKpi className="col-start-4 row-start-1 row-span-2" />
+          <SkeletonPanel className="col-span-3 col-start-1 row-start-3 row-span-4" />
+          <SkeletonDonut className="col-start-4 row-start-3 row-span-4" />
+        </div>
+      );
+    }
+    return (
+      <div className="flex-1 min-h-0 flex flex-col overflow-hidden rounded-lg bg-card border border-border">
+        <div className="flex items-center gap-2 border-b border-border p-3">
+          <SkeletonLine className="h-8 flex-1 rounded-md" />
+          <SkeletonLine className="h-8 w-40 max-w-[40%] rounded-md" />
+          <SkeletonLine className="h-8 w-24 rounded-md" />
+        </div>
+        <SkeletonTableCard rows={7} />
+      </div>
+    );
+  }
   if (error && bookings.length === 0) return (
     <div className="py-20 px-6 text-center text-sm text-muted-foreground">{error}</div>
   );
@@ -293,15 +359,24 @@ export function BookingTab() {
           <Plus className="w-3.5 h-3.5" /> Add Booking
         </button>
         {view === 'analytics' && (
-          <Tabs value={period} onValueChange={(v) => setPeriod(v as BookingPeriod)}>
-            <TabsList className="h-8">
-              <TabsTrigger value="total" className="text-[10px] px-2 h-6">Total</TabsTrigger>
-              <TabsTrigger value="daily" className="text-[10px] px-2 h-6">Daily</TabsTrigger>
-              <TabsTrigger value="weekly" className="text-[10px] px-2 h-6">Weekly</TabsTrigger>
-              <TabsTrigger value="monthly" className="text-[10px] px-2 h-6">Monthly</TabsTrigger>
-              <TabsTrigger value="yearly" className="text-[10px] px-2 h-6">Yearly</TabsTrigger>
-            </TabsList>
-          </Tabs>
+          <div className="relative flex justify-end" ref={customWrapRef}>
+            <Tabs value={period} onValueChange={(v) => { const next = v as BookingPeriod; setPeriod(next); if (next !== 'custom') setCustomOpen(false); }}>
+              <TabsList className="h-8">
+                <TabsTrigger value="total" className="text-[10px] px-2 h-6">Total</TabsTrigger>
+                <TabsTrigger value="daily" className="text-[10px] px-2 h-6">Daily</TabsTrigger>
+                <TabsTrigger value="weekly" className="text-[10px] px-2 h-6">Weekly</TabsTrigger>
+                <TabsTrigger value="monthly" className="text-[10px] px-2 h-6">Monthly</TabsTrigger>
+                <TabsTrigger value="yearly" className="text-[10px] px-2 h-6">Yearly</TabsTrigger>
+                <TabsTrigger value="custom" className="text-[10px] px-2 h-6" onClick={() => setCustomOpen((o) => (period === 'custom' ? !o : true))}>Custom</TabsTrigger>
+              </TabsList>
+            </Tabs>
+            {period === 'custom' && customOpen && (
+              <div className="absolute right-0 top-full mt-1 flex items-start gap-3 z-[60]">
+                <DateField inline value={customFrom} onChange={(iso) => setCustomFrom(iso)} label="From" />
+                <DateField inline value={customTo} onChange={(iso) => setCustomTo(iso)} label="To" />
+              </div>
+            )}
+          </div>
         )}
       </div>
 
@@ -361,7 +436,7 @@ export function BookingTab() {
             </CardHeader>
             <CardContent className="flex-1 min-h-0 p-0 overflow-hidden">
               <ChartContainer config={chartConfig} className="h-full w-full aspect-auto">
-                <AreaChart data={stats.bookingsTrend} margin={{ left: 8, right: 8 }}>
+                <AreaChart data={stats.bookingsTrend} margin={{ top: 20, right: 20, bottom: 20, left: 20 }}>
                   <defs>
                     <linearGradient id="fillDailyBookings" x1="0" y1="0" x2="0" y2="1">
                       <stop offset="5%" stopColor="var(--color-bookings)" stopOpacity={0.8} />
@@ -369,10 +444,11 @@ export function BookingTab() {
                     </linearGradient>
                   </defs>
                   <CartesianGrid vertical={false} strokeDasharray="3 3" />
-                  <XAxis dataKey="label" tickLine={false} axisLine={false} tickMargin={8} minTickGap={24} padding={{ left: 12, right: 12 }} />
-                  <YAxis hide domain={[0, (dataMax: number) => (dataMax <= 0 ? 5 : Math.ceil(dataMax * 1.25))]} />
+                  <XAxis dataKey="label" tickLine={false} axisLine={false} tickMargin={8} minTickGap={10} />
+                  <YAxis tickLine={false} axisLine={false} width={32} tick={{ fontSize: 10, fill: 'currentColor', opacity: 0.6 }}
+                    domain={[0, (dataMax: number) => (dataMax <= 0 ? 5 : Math.ceil(dataMax * 1.25))]} />
                   <Tooltip content={<ChartTooltipContent />} />
-                  <Area dataKey="bookings" type="monotone" fill="url(#fillDailyBookings)" stroke="var(--color-bookings)" strokeWidth={2} />
+                  <Area dataKey="bookings" type="monotone" fill="url(#fillDailyBookings)" stroke="var(--color-bookings)" strokeWidth={2} isAnimationActive={false} />
                 </AreaChart>
               </ChartContainer>
             </CardContent>
@@ -433,6 +509,14 @@ export function BookingTab() {
                 {dateFilter === 'custom' && (
                   <DateField value={customDate} onChange={setCustomDate} placeholder="Pick a date" />
                 )}
+                <select
+                  value={listStatus}
+                  onChange={(e) => setListStatus(e.target.value as ListStatusFilter)}
+                  className="h-8 px-2 text-[11px] font-medium rounded-md border border-border bg-card text-foreground outline-none cursor-pointer"
+                >
+                  <option value="all">All statuses</option>
+                  {STATUS_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
+                </select>
               </>
             ) : (
               <span className="h-8 inline-flex items-center rounded-md border border-border bg-muted px-2.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
@@ -442,12 +526,20 @@ export function BookingTab() {
             {(search || (view === 'list' && dateFilter !== 'all')) && (
               <button
                 type="button"
-                onClick={() => { setSearch(''); setDateFilter('all'); setCustomDate(''); }}
+                onClick={() => { setSearch(''); setDateFilter('all'); setCustomDate(''); setListStatus('all'); }}
                 className="h-8 px-2 text-[11px] font-semibold text-muted-foreground hover:text-foreground cursor-pointer"
               >
                 Clear
               </button>
             )}
+            <button
+              type="button"
+              onClick={() => load(true)}
+              title="Reload bookings from the database"
+              className="h-8 inline-flex items-center gap-1.5 rounded-md border border-border bg-card px-2.5 text-[11px] font-semibold text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+            >
+              <RefreshCw className={`w-3.5 h-3.5 ${refreshing ? 'animate-spin' : ''}`} /> Refresh
+            </button>
           </div>
 
           <div className="flex-1 min-h-0 overflow-y-auto">
@@ -457,6 +549,7 @@ export function BookingTab() {
                   <th className="px-3 py-3 font-semibold">Client</th>
                   <th className="px-3 py-3 font-semibold">Service</th>
                   <th className="px-3 py-3 font-semibold">Stylist</th>
+                  {!branch && <th className="px-3 py-3 font-semibold">Branch</th>}
                   <th className="px-3 py-3 font-semibold">When</th>
                   <th className="px-3 py-3 font-semibold">Status</th>
                   <th className="px-1 py-3 w-10"></th>
@@ -464,7 +557,7 @@ export function BookingTab() {
               </thead>
               <tbody>
                 {filteredBookings.length === 0 ? (
-                  <tr><td colSpan={6} className="px-3 py-12 text-center text-muted-foreground">{bookings.length === 0 ? 'No bookings found.' : 'No bookings match your filters.'}</td></tr>
+                  <tr><td colSpan={branch ? 6 : 7} className="px-3 py-12 text-center text-muted-foreground">{scopedBookings.length === 0 ? 'No bookings found.' : 'No bookings match your filters.'}</td></tr>
                 ) : pageItems.map((b) => (
                   <tr key={b.id} className="border-b border-border align-top">
                     <td className="px-3 py-3">
@@ -473,6 +566,20 @@ export function BookingTab() {
                     </td>
                     <td className="px-3 py-3">{b.serviceName}</td>
                     <td className="px-3 py-3 text-muted-foreground">{b.stylistName || '—'}</td>
+                    {!branch && (
+                      <td className="px-3 py-3 text-xs uppercase text-muted-foreground">
+                        <span className="inline-flex items-center gap-1.5">
+                          {b.branch ? (
+                            <>
+                              <span className="h-1.5 w-1.5 rounded-full bg-neutral-400" />
+                              {b.branch}
+                            </>
+                          ) : (
+                            '—'
+                          )}
+                        </span>
+                      </td>
+                    )}
                     <td className="px-3 py-3 whitespace-nowrap">
                       <div className="font-semibold">{b.date}</div>
                       <div className="text-muted-foreground">{b.time}</div>
@@ -577,6 +684,7 @@ export function BookingTab() {
         open={addOpen}
         onClose={() => setAddOpen(false)}
         onCreated={(b) => setBookings((prev) => [b, ...prev])}
+        branch={branch}
       />
     </div>
   );

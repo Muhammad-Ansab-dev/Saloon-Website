@@ -34,6 +34,8 @@ See `.env.example` for the full list.
 | `ADMIN_SECRET` | Production | HMAC secret for the session cookie. Dev fallback only; generate one with `openssl rand -hex 32`. |
 | `CLOUDINARY_CLOUD_NAME` / `CLOUDINARY_API_KEY` / `CLOUDINARY_API_SECRET` | Optional | When all three are set, admin uploads go to Cloudinary; otherwise files are stored in `data/uploads/`. |
 | `CLOUDINARY_FOLDER` | Optional | Cloudinary folder name (default `hair-salon`). |
+| `SMTP_HOST` / `SMTP_PORT` / `SMTP_USER` / `SMTP_PASS` | Optional | SMTP credentials for booking confirmation emails (`smtp.gmail.com` + a Gmail App Password works out of the box). Unset = no emails sent. |
+| `MAIL_FROM` | Optional | `From` header for confirmation emails (default `Paul Hair Studio <SMTP_USER>`). |
 
 In production the auth layer **fails closed**: without `ADMIN_USERNAME`, `ADMIN_PASSWORD` and `ADMIN_SECRET`, login can never succeed and no session token verifies.
 

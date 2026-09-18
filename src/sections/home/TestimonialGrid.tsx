@@ -36,6 +36,7 @@ const TestimonialCard: React.FC<{ index: number }> = ({ index }) => {
         <img
           src={image}
           alt={testimonial.author}
+          loading="lazy"
           className="absolute inset-0 w-full h-full object-cover object-center"
         />
       </div>

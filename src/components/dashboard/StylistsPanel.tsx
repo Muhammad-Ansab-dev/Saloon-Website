@@ -12,11 +12,14 @@
 // All mutations are protected by the /api/admin/* middleware; errors (DB down
 // / not signed in) surface in a banner instead of failing silently.
 // ---------------------------------------------------------------------------
-import React, { useCallback, useEffect, useState } from 'react';
-import { Boxes, Database, Loader2, Pencil, Plus, Trash2, X } from 'lucide-react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { Boxes, Database, Loader2, MapPin, Pencil, Plus, Trash2, X } from 'lucide-react';
 import Image from 'next/image';
 import type { SiteStylist } from '@/hooks/useSiteContent';
+import { stylistBranch, LOCATIONS } from '@/data/salonData';
+import { Badge } from '@/components/ui/badge';
 import { ImagePicker } from './ImagePicker';
+import { SkeletonTableCard } from './Skeleton';
 
 type LoadState = 'loading' | 'ready' | 'error';
 
@@ -41,8 +44,19 @@ async function api(path: string, init: RequestInit): Promise<Record<string, unkn
 
 const HEADERS = { 'Content-Type': 'application/json' };
 
-export function StylistsPanel() {
+/** Branches used for the select + grouping order. Seeded from the static
+ * LOCATIONS so the UI never blanks, then refreshed from /api/content once
+ * the dashboard loads (so branches created in the Branches tab appear). */
+const STATIC_BRANCH_OPTIONS = LOCATIONS.map((l) => ({
+  slug: l.city.toLowerCase(),
+  label: l.city.charAt(0).toUpperCase() + l.city.slice(1).toLowerCase(),
+}));
+
+type StylistGroup = { key: string; label: string; stylists: SiteStylist[] };
+
+export function StylistsPanel({ branch }: { branch?: string }) {
   const [stylists, setStylists] = useState<SiteStylist[]>([]);
+  const [branchOptions, setBranchOptions] = useState(STATIC_BRANCH_OPTIONS);
   const [loadState, setLoadState] = useState<LoadState>('loading');
   const [mutError, setMutError] = useState('');
   const [busyId, setBusyId] = useState<string | null>(null);
@@ -54,12 +68,14 @@ export function StylistsPanel() {
   const [editName, setEditName] = useState('');
   const [editRole, setEditRole] = useState('');
   const [editImage, setEditImage] = useState('');
+  const [editBranch, setEditBranch] = useState<string>('');
   const [savingEdit, setSavingEdit] = useState(false);
 
   const [addOpen, setAddOpen] = useState(false);
   const [addName, setAddName] = useState('');
   const [addRole, setAddRole] = useState('');
   const [addImage, setAddImage] = useState('');
+  const [addBranch, setAddBranch] = useState<string>(branchOptions[0]?.slug ?? '');
   const [adding, setAdding] = useState(false);
 
   const load = useCallback(async () => {
@@ -69,6 +85,16 @@ export function StylistsPanel() {
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const data = await res.json();
       setStylists(Array.isArray(data?.stylists) ? data.stylists : []);
+      if (Array.isArray(data?.branches) && data.branches.length > 0) {
+        setBranchOptions(
+          data.branches
+            .map((b: { slug: string; city: string }) => ({
+              slug: b.slug,
+              label: b.city.charAt(0).toUpperCase() + b.city.slice(1).toLowerCase(),
+            }))
+            .concat(STATIC_BRANCH_OPTIONS.filter((s) => !data.branches.some((b: { slug: string }) => b.slug === s.slug)))
+        );
+      }
       setLoadState('ready');
     } catch {
       setLoadState('error');
@@ -87,7 +113,12 @@ export function StylistsPanel() {
       await api('/api/admin/stylists', {
         method: 'POST',
         headers: HEADERS,
-        body: JSON.stringify({ name: addName.trim(), role: addRole.trim(), image: addImage.trim() }),
+        body: JSON.stringify({
+          name: addName.trim(),
+          role: addRole.trim(),
+          image: addImage.trim(),
+          branch: branch ? branch.toLowerCase() : addBranch.toLowerCase(),
+        }),
       });
       setAddOpen(false);
       setAddName('');
@@ -116,6 +147,7 @@ export function StylistsPanel() {
             name: editName.trim(),
             role: editRole.trim(),
             ...(editImage.trim() !== editTarget.image ? { image: editImage.trim() } : {}),
+            ...(branch ? {} : { branch: editBranch.toLowerCase() }),
           },
         }),
       });
@@ -150,9 +182,39 @@ export function StylistsPanel() {
     }
   };
 
+  // When scoped to a branch, only show stylists assigned to it.
+  const visibleStylists = useMemo(
+    () => (branch ? stylists.filter((s) => stylistBranch(s) === branch.toLowerCase()) : stylists),
+    [stylists, branch]
+  );
+
+  // Superadmin view: group the roster by branch into vertically-stacked boxes
+  // (site order from the branch list first, then any leftover/unassigned sleeve).
+  const groups = useMemo<StylistGroup[]>(() => {
+    const byBranch = new Map<string, SiteStylist[]>();
+    for (const s of visibleStylists) {
+      const key = stylistBranch(s);
+      if (!byBranch.has(key)) byBranch.set(key, []);
+      byBranch.get(key)!.push(s);
+    }
+    const ordered: StylistGroup[] = [];
+    for (const o of branchOptions) {
+      const key = o.slug;
+      const members = byBranch.get(key);
+      if (members) {
+        ordered.push({ key, label: o.label, stylists: members });
+        byBranch.delete(key);
+      }
+    }
+    for (const [key, members] of byBranch) {
+      ordered.push({ key, label: key ? key.charAt(0).toUpperCase() + key.slice(1) : 'Unassigned', stylists: members });
+    }
+    return ordered;
+  }, [visibleStylists, branchOptions]);
+
   const counts = {
-    total: stylists.length,
-    withRole: stylists.filter((s) => s.role).length,
+    total: visibleStylists.length,
+    withRole: visibleStylists.filter((s) => s.role).length,
   };
 
   const modals = (
@@ -202,6 +264,22 @@ export function StylistsPanel() {
                 </label>
                 <ImagePicker value={addImage} onValue={setAddImage} label="Stylist photo" />
               </div>
+              {!branch && (
+                <div>
+                  <label className="block text-[10px] font-bold uppercase tracking-[0.2em] text-neutral-500 mb-1.5">
+                    Salon / Branch
+                  </label>
+                  <select
+                    value={addBranch}
+                    onChange={(e) => setAddBranch(e.target.value)}
+                    className="w-full rounded-lg border border-neutral-700 bg-neutral-900 px-3 py-2 text-sm text-white outline-none transition-colors focus:border-white"
+                  >
+                    {branchOptions.map((o) => (
+                      <option key={o.slug} value={o.slug}>{o.label}</option>
+                    ))}
+                  </select>
+                </div>
+              )}
             </div>
             <div className="mt-7 flex items-center justify-end gap-2">
               <button
@@ -269,6 +347,22 @@ export function StylistsPanel() {
                 </label>
                 <ImagePicker value={editImage} onValue={setEditImage} label="Stylist photo" />
               </div>
+              {!branch && (
+                <div>
+                  <label className="block text-[10px] font-bold uppercase tracking-[0.2em] text-neutral-500 mb-1.5">
+                    Salon / Branch
+                  </label>
+                  <select
+                    value={editBranch}
+                    onChange={(e) => setEditBranch(e.target.value)}
+                    className="w-full rounded-lg border border-neutral-700 bg-neutral-900 px-3 py-2 text-sm text-white outline-none transition-colors focus:border-white"
+                  >
+                    {branchOptions.map((o) => (
+                      <option key={o.slug} value={o.slug}>{o.label}</option>
+                    ))}
+                  </select>
+                </div>
+              )}
             </div>
             <div className="mt-7 flex items-center justify-end gap-2">
               <button
@@ -390,56 +484,114 @@ export function StylistsPanel() {
         </div>
       )}
 
-      {/* Roster table */}
+      {/* Roster — flat table when branch-scoped, per-branch boxes for the superadmin */}
       {loadState !== 'error' && (
-        <div className="flex-1 min-h-0 overflow-hidden bg-card border border-border">
-          {loadState === 'loading' ? (
-            <div className="flex items-center justify-center gap-2 py-12 text-sm text-muted-foreground">
-              <Loader2 className="w-4 h-4 animate-spin" /> Loading stylists&hellip;
-            </div>
-          ) : stylists.length === 0 ? (
-            <div className="py-12 px-6 text-center">
-              <p className="text-xs text-muted-foreground">No stylists yet — add the first one.</p>
-            </div>
-          ) : (
-            <div className="h-full overflow-y-auto">
-              <table className="w-full text-left text-xs">
-                <thead>
-                  <tr className="border-b border-border text-muted-foreground uppercase text-[10px] tracking-[0.15em]">
-                    <th className="px-3 py-3 font-semibold">Name</th>
-                    <th className="px-3 py-3 font-semibold">Role</th>
-                    <th className="px-1 py-3 w-20"></th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {stylists.map((s) => (
-                    <tr key={s.id} className="border-b border-border align-middle">
-                      <td className="px-3 py-3">
-                        <div className="flex items-center gap-3">
-                          <span className="relative w-8 h-8 rounded-full overflow-hidden border border-border shrink-0 bg-muted">
-                            {s.image ? <Image src={s.image} alt={s.name} fill sizes="32px" className="object-cover" /> : null}
-                          </span>
-                          <div className="font-medium">{s.name}</div>
-                        </div>
-                      </td>
-                      <td className="px-3 py-3 text-muted-foreground">{s.role || '\u2014'}</td>
-                      <td className="px-3 py-3">
-                        <div className="flex items-center justify-end gap-1">
-                          <button type="button" aria-label={`Edit ${s.name}`} disabled={busyId === s.id} onClick={() => { setEditTarget(s); setEditName(s.name); setEditRole(s.role || ''); setEditImage(s.image || ''); setMutError(''); }} className="p-1.5 text-muted-foreground hover:text-foreground disabled:opacity-50 cursor-pointer">
-                            <Pencil className="w-3.5 h-3.5" />
-                          </button>
-                          <button type="button" aria-label={`Delete ${s.name}`} disabled={busyId === s.id} onClick={() => { setDeleteTarget(s); setMutError(''); }} className="p-1.5 text-muted-foreground hover:text-destructive disabled:opacity-50 cursor-pointer">
-                            {busyId === s.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Trash2 className="w-3.5 h-3.5" />}
-                          </button>
-                        </div>
-                      </td>
+        branch ? (
+          <div className="flex-1 min-h-0 overflow-hidden bg-card border border-border">
+            {loadState === 'loading' ? (
+              <SkeletonTableCard rows={8} avatar />
+            ) : visibleStylists.length === 0 ? (
+              <div className="py-12 px-6 text-center">
+                <p className="text-xs text-muted-foreground">{stylists.length === 0 ? 'No stylists yet — add the first one.' : 'No stylists assigned to this branch.'}</p>
+              </div>
+            ) : (
+              <div className="h-full overflow-y-auto">
+                <table className="w-full text-left text-xs">
+                  <thead>
+                    <tr className="border-b border-border text-muted-foreground uppercase text-[10px] tracking-[0.15em]">
+                      <th className="px-3 py-3 font-semibold">Name</th>
+                      <th className="px-3 py-3 font-semibold">Role</th>
+                      <th className="px-1 py-3 w-20"></th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </div>
+                  </thead>
+                  <tbody>
+                    {visibleStylists.map((s) => (
+                      <tr key={s.id} className="border-b border-border align-middle">
+                        <td className="px-3 py-3">
+                          <div className="flex items-center gap-3">
+                            <span className="relative w-8 h-8 rounded-full overflow-hidden border border-border shrink-0 bg-muted">
+                              {s.image ? <Image src={s.image} alt={s.name} fill sizes="32px" className="object-cover" /> : null}
+                            </span>
+                            <div className="font-medium">{s.name}</div>
+                          </div>
+                        </td>
+                        <td className="px-3 py-3 text-muted-foreground">{s.role || '\u2014'}</td>
+                        <td className="px-3 py-3">
+                          <div className="flex items-center justify-end gap-1">
+                            <button type="button" aria-label={`Edit ${s.name}`} disabled={busyId === s.id} onClick={() => { setEditTarget(s); setEditName(s.name); setEditRole(s.role || ''); setEditImage(s.image || ''); setEditBranch(stylistBranch(s)); setMutError(''); }} className="p-1.5 text-muted-foreground hover:text-foreground disabled:opacity-50 cursor-pointer">
+                              <Pencil className="w-3.5 h-3.5" />
+                            </button>
+                            <button type="button" aria-label={`Delete ${s.name}`} disabled={busyId === s.id} onClick={() => { setDeleteTarget(s); setMutError(''); }} className="p-1.5 text-muted-foreground hover:text-destructive disabled:opacity-50 cursor-pointer">
+                              {busyId === s.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Trash2 className="w-3.5 h-3.5" />}
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        ) : (
+          <div className="flex-1 min-h-0 overflow-y-auto space-y-4">
+            {loadState === 'loading' ? (
+              <SkeletonTableCard rows={8} avatar />
+            ) : stylists.length === 0 ? (
+              <div className="py-12 px-6 text-center bg-card border border-border">
+                <p className="text-xs text-muted-foreground">No stylists yet — add the first one.</p>
+              </div>
+            ) : groups.length === 0 ? (
+              <div className="py-12 px-6 text-center bg-card border border-border">
+                <p className="text-xs text-muted-foreground">No stylists found.</p>
+              </div>
+            ) : (
+              groups.map((g) => (
+                <div key={g.key} className="bg-card border border-border">
+                  <div className="flex items-center gap-2 px-4 py-3 border-b border-border">
+                    <MapPin className="w-4 h-4 text-muted-foreground" />
+                    <h4 className="text-sm font-bold uppercase tracking-wide">{g.label}</h4>
+                    <Badge variant="secondary" className="ml-auto">{g.stylists.length} {g.stylists.length === 1 ? 'stylist' : 'stylists'}</Badge>
+                  </div>
+                  <table className="w-full text-left text-xs">
+                    <thead>
+                      <tr className="border-b border-border text-muted-foreground uppercase text-[10px] tracking-[0.15em]">
+                        <th className="px-3 py-3 font-semibold">Name</th>
+                        <th className="px-3 py-3 font-semibold">Role</th>
+                        <th className="px-1 py-3 w-20"></th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {g.stylists.map((s) => (
+                        <tr key={s.id} className="border-b border-border align-middle">
+                          <td className="px-3 py-3">
+                            <div className="flex items-center gap-3">
+                              <span className="relative w-8 h-8 rounded-full overflow-hidden border border-border shrink-0 bg-muted">
+                                {s.image ? <Image src={s.image} alt={s.name} fill sizes="32px" className="object-cover" /> : null}
+                              </span>
+                              <div className="font-medium">{s.name}</div>
+                            </div>
+                          </td>
+                          <td className="px-3 py-3 text-muted-foreground">{s.role || '\u2014'}</td>
+                          <td className="px-3 py-3">
+                            <div className="flex items-center justify-end gap-1">
+                              <button type="button" aria-label={`Edit ${s.name}`} disabled={busyId === s.id} onClick={() => { setEditTarget(s); setEditName(s.name); setEditRole(s.role || ''); setEditImage(s.image || ''); setEditBranch(stylistBranch(s)); setMutError(''); }} className="p-1.5 text-muted-foreground hover:text-foreground disabled:opacity-50 cursor-pointer">
+                                <Pencil className="w-3.5 h-3.5" />
+                              </button>
+                              <button type="button" aria-label={`Delete ${s.name}`} disabled={busyId === s.id} onClick={() => { setDeleteTarget(s); setMutError(''); }} className="p-1.5 text-muted-foreground hover:text-destructive disabled:opacity-50 cursor-pointer">
+                                {busyId === s.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Trash2 className="w-3.5 h-3.5" />}
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              ))
+            )}
+          </div>
+        )
       )}
       {modals}
     </div>

@@ -7,13 +7,15 @@
 // fade-in and spring entrance animations.
 
 import React from 'react';
-import { LOCATIONS } from '@/data/salonData';
 import { ExternalLink } from 'lucide-react';
 import { ScrollReveal, SpringReveal, Parallax } from '../../components/ui/ScrollReveal';
-import { useSiteContent } from '@/hooks/useSiteContent';
+import { useSiteContent, staticBranches } from '@/hooks/useSiteContent';
 
 export const VisitUs: React.FC = () => {
-  const { images } = useSiteContent();
+  const { images, branches } = useSiteContent();
+  // Live branches from the store; falls back to the static LOCATIONS while the
+  // fetch is in flight (and if every branch was deleted by an admin).
+  const branchList = branches.length > 0 ? branches : staticBranches();
   return (
     <section id="visit" className="relative bg-[#f2f0eb] py-20 sm:py-28 overflow-hidden">
       {/* Background Giant Watermark Script Text */}
@@ -39,7 +41,7 @@ export const VisitUs: React.FC = () => {
 
             {/* Branches: Zurich & Paris */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-8 sm:gap-10">
-              {LOCATIONS.map((loc, idx) => (
+              {branchList.map((loc, idx) => (
                 <SpringReveal
                   key={loc.city}
                   direction={idx === 0 ? 'left' : 'right'}

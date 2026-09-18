@@ -8,11 +8,15 @@
 //
 // Only raster image types on the EXT_BY_TYPE whitelist are accepted
 // (no SVG, which would be a stored-XSS vector if served inline).
+// Media management is a superadmin action: branch managers are rejected
+// here (403) even though they have a valid session.
 // ─────────────────────────────────────────────────────────────
 import { NextResponse } from 'next/server';
 import { mkdir, writeFile } from 'node:fs/promises';
 import path from 'node:path';
+import { cookies } from 'next/headers';
 import { cloudinaryConfigured, cloudinaryUpload } from '@/lib/cloudinary';
+import { sessionFromRequest } from '@/lib/auth';
 
 const UPLOAD_DIR = path.join(process.cwd(), 'data', 'uploads');
 const MAX_BYTES = 25 * 1024 * 1024;
@@ -25,6 +29,17 @@ const EXT_BY_TYPE: Record<string, string> = {
 };
 
 export async function POST(request: Request) {
+  const claim = await sessionFromRequest({ cookies: await cookies() });
+  if (!claim) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+  if (claim.role === 'branch') {
+    return NextResponse.json(
+      { error: 'Media management is restricted to the superadmin account' },
+      { status: 403 }
+    );
+  }
+
   let form: FormData;
   try {
     form = await request.formData();
