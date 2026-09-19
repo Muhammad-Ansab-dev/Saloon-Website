@@ -23,6 +23,7 @@ export const ServicesByCategory: React.FC<ServicesByCategoryProps> = ({
   const { services: allServices } = useSiteContent(
     initialServices ? { services: initialServices } : undefined
   );
+  // Narrow the full list down to the current category only.
   const services = allServices.filter((service) => service.category === category);
 
   return (
@@ -53,6 +54,7 @@ export const ServicesByCategory: React.FC<ServicesByCategoryProps> = ({
       <div className="px-4 sm:px-6 lg:px-8 pb-24">
         <div className="max-w-6xl mx-auto grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-7">
           {services.map((service) => {
+            // Pick the display image: the service's own, then its media entry, else a default.
             const media = SERVICE_MEDIA[service.id];
             const image = service.image || (media?.image ?? 'https://res.cloudinary.com/dittrfbja/image/upload/v1789650822/hair-salon/hero-1.webp');
             return (
@@ -90,6 +92,7 @@ export const ServicesByCategory: React.FC<ServicesByCategoryProps> = ({
                   </div>
                 </Link>
                 <div className="p-6 sm:p-8 pt-0">
+                  {/* "Book now" pre-selects this service in the shared booking modal */}
                   <button
                     type="button"
                     onClick={() => onSelectService(service)}

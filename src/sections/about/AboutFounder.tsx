@@ -12,6 +12,7 @@ export const AboutFounder: React.FC = () => {
     <section className="bg-neutral-950 py-20 sm:py-28 overflow-hidden">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 items-center">
+          // Portrait — ordered second in the layout so the text reads first on desktop.
           <div className="lg:col-span-5 lg:order-2">
             <SpringReveal direction="right" distance={80} easing="spring" className="relative overflow-hidden shadow-2xl">
               <div className="relative h-[400px] sm:h-[500px]">

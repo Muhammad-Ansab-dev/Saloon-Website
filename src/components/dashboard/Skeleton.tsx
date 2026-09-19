@@ -8,6 +8,7 @@
 import React from 'react';
 import { cn } from '@/lib/utils';
 
+/** Generic pulsing block; everything else is built out of these. */
 export function SkeletonLine({ className }: { className?: string }) {
   return <div className={cn('animate-pulse rounded-md bg-muted', className)} />;
 }

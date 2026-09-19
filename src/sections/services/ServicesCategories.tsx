@@ -19,13 +19,16 @@ const CATEGORY_MEDIA: Record<string, string> = {
   'Bridal & Occasion': 'https://res.cloudinary.com/dittrfbja/image/upload/v1789650830/hair-salon/lookbook-1.webp',
 };
 
+// Turns a category name into a URL-safe slug, e.g. "Cut & Style" → "cut-style".
 export const categorySlug = (category: string) =>
   category.toLowerCase().replace(/[^a-z0-9]+/g, '-');
 
 export const ServicesCategories: React.FC<{ initialServices?: ServiceItem[] }> = ({ initialServices }) => {
+  // Use server-fetched services when provided, else pull from the live store.
   const { services, images } = useSiteContent(
     initialServices ? { services: initialServices } : undefined
   );
+  // Unique categories in the order they first appear — one card per category.
   const categories = Array.from(new Set(services.map((service) => service.category)));
 
   return (
@@ -49,6 +52,7 @@ export const ServicesCategories: React.FC<{ initialServices?: ServiceItem[] }> =
       <div className="px-4 sm:px-6 lg:px-8 pb-24">
         <div className="max-w-6xl mx-auto grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-7">
           {categories.map((category, idx) => {
+            // How many services sit under this category (shown on the card).
             const count = services.filter((service) => service.category === category).length;
             return (
               <motion.div

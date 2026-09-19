@@ -11,6 +11,7 @@ import { ArrowRight } from 'lucide-react';
 export const AboutCta: React.FC = () => {
   const router = useRouter();
 
+  // The button leaves the /about page and jumps to the booking flow on the homepage.
   return (
     <section className="bg-[#fce7ee] min-h-[200px] overflow-hidden">
       <div className="max-w-7xl mx-auto px-4 sm:px-8 lg:px-12 h-full min-h-[200px] flex flex-col sm:flex-row items-center justify-between gap-6 py-12 sm:py-0">

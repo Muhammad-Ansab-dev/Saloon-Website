@@ -7,10 +7,17 @@
 // in the handlers) and /dashboard routes (redirect to login when
 // unauthenticated). A branch manager manually opening /dashboard (or
 // another branch's console) is redirected back to their own console.
+// In plain words: this is the hallway guard for everything under /dashboard
+// and /api/admin. Visitors who aren't signed in get bounced (API routes get a
+// 401, pages redirect to the login page), and a branch manager is only ever
+// allowed into their OWN branch console.
 // ─────────────────────────────────────────────────────────────
 import { NextRequest, NextResponse } from 'next/server';
 import { sessionFromRequest } from './lib/auth';
 
+// Next.js calls this before every matched route; it checks the session cookie
+// and decides to let the request through, redirect it, or answer with a 401.
+// Params: request — the incoming request. Returns a next/redirect/JSON response.
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
@@ -54,6 +61,8 @@ export async function middleware(request: NextRequest) {
   return NextResponse.redirect(new URL(`/dashboard/branch/${claim.branch}`, request.url));
 }
 
+// Only these two route families pass through the guard; everything else on
+// the public site is untouched by this middleware.
 export const config = {
   matcher: ['/api/admin/:path*', '/dashboard/:path*'],
 };

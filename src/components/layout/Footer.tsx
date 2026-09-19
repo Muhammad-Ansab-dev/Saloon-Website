@@ -35,7 +35,7 @@ export const Footer: React.FC<FooterProps> = ({ onScrollToTop }) => {
 
         {/* 3-Column Content */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-12 sm:gap-14 text-center md:text-left mb-16">
-          {/* Column 1: CONTACT */}
+          {/* Column 1: CONTACT — address, email and phone */}
           <div>
             <h3 className="text-sm sm:text-base font-black tracking-[0.2em] uppercase text-white mb-4">
               CONTACT
@@ -53,7 +53,7 @@ export const Footer: React.FC<FooterProps> = ({ onScrollToTop }) => {
             </div>
           </div>
 
-          {/* Column 2: Center Slogan & Socials */}
+          {/* Column 2: Center slogan + social icon squares */}
           <div className="flex flex-col items-center justify-center">
             <h3 className="font-editorial text-base sm:text-lg font-black tracking-[0.15em] uppercase text-white text-center mb-6 max-w-xs leading-snug">
               IT'S NOT JUST A HAIR. IT'S STATE OF MIND.
@@ -100,7 +100,7 @@ export const Footer: React.FC<FooterProps> = ({ onScrollToTop }) => {
             </div>
           </div>
 
-          {/* Column 3: HOURS */}
+          {/* Column 3: HOURS — opening times */}
           <div className="md:text-right">
             <h3 className="text-sm sm:text-base font-black tracking-[0.2em] uppercase text-white mb-4">
               HOURS
@@ -145,7 +145,7 @@ export const Footer: React.FC<FooterProps> = ({ onScrollToTop }) => {
             </a>
           </p>
 
-          {/* Privacy & Back to Top */}
+          {/* Privacy & Back to Top — the arrow calls the Providers' scroll-to-top action */}
           <div className="flex items-center space-x-6">
             <span className="hover:text-neutral-300 cursor-pointer transition-colors">Privacy</span>
             <button

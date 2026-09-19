@@ -32,6 +32,8 @@ export interface SiteContextValue {
   onAddToCart: (product: Product, quantity?: number) => void;
 }
 
+// The shared "bucket" (React context) that stores all the global actions.
+// Every page section can reach in and call these without being directly connected.
 const SiteContext = createContext<SiteContextValue>({
   onBookNow: () => {},
   onSelectServiceForBooking: () => {},
@@ -40,24 +42,30 @@ const SiteContext = createContext<SiteContextValue>({
   onAddToCart: () => {},
 });
 
+// The hook every section uses: returns the global actions above.
 export const useSite = () => useContext(SiteContext);
 
 export const Providers: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
+  // Cart state: the items in the bag, and whether the slide-out cart drawer is open.
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [isCartOpen, setIsCartOpen] = useState(false);
+  // Booking modal state: whether it is open, plus an optional service/date/time to pre-fill.
   const [isBookingOpen, setIsBookingOpen] = useState(false);
   const [bookingPreSelect, setBookingPreSelect] = useState<{
     service?: ServiceItem | null;
     date?: string;
     time?: string;
   }>({});
+  // Product modal state: the product being shown in the popup (null = closed).
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
 
+  // Which route we are on; the admin dashboard should hide all site chrome.
   const pathname = usePathname();
   const isDashboard = pathname.startsWith('/dashboard');
 
+  // On every page navigation: reset scroll, and clean up overlays / handle the ?scrollTo deep link.
   React.useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'auto' });
     // Close all overlays when entering the dashboard area so site modals don't bleed through.
@@ -80,6 +88,7 @@ export const Providers: React.FC<{ children: React.ReactNode }> = ({
     }
   }, [pathname, isDashboard]);
 
+  // Adds a product to the cart; if it is already there, just bumps the quantity.
   const handleAddToCart = (product: Product, quantity = 1) => {
     setCartItems((prev) => {
       const existing = prev.find((item) => item.product.id === product.id);
@@ -94,6 +103,7 @@ export const Providers: React.FC<{ children: React.ReactNode }> = ({
     });
   };
 
+  // Increases/decreases an item's quantity by delta; removes it if that would drop below 1.
   const handleUpdateQuantity = (productId: string, delta: number) => {
     setCartItems((prev) =>
       prev
@@ -108,29 +118,36 @@ export const Providers: React.FC<{ children: React.ReactNode }> = ({
     );
   };
 
+  // Removes a single line item from the cart entirely.
   const handleRemoveItem = (productId: string) => {
     setCartItems((prev) => prev.filter((item) => item.product.id !== productId));
   };
 
+  // Empties the whole cart in one go.
   const handleClearCart = () => setCartItems([]);
 
+  // Generic "Book now": opens the booking modal with no service pre-selected.
   const handleOpenBooking = () => {
     setBookingPreSelect({});
     setIsBookingOpen(true);
   };
 
+  // "Book now" from a specific service: pre-selects it, then opens the modal.
   const handleSelectServiceForBooking = (service: ServiceItem) => {
     setBookingPreSelect({ service });
     setIsBookingOpen(true);
   };
 
+  // Smooth-scrolls to a section on the same page (used by the header nav links).
   const handleNavigate = (sectionId: string) => {
     const el = document.getElementById(sectionId);
     if (el) el.scrollIntoView({ behavior: 'smooth' });
   };
 
+  // Smooth-scrolls to the very top (footer "back to top" arrow).
   const handleScrollToTop = () => window.scrollTo({ top: 0, behavior: 'smooth' });
 
+  // Total number of items in the bag, used for the header cart badge.
   const totalCartCount = cartItems.reduce((acc, item) => acc + item.quantity, 0);
 
   return (

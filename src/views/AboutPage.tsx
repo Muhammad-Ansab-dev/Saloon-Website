@@ -16,6 +16,7 @@ import { AboutTimeline } from '@/sections/about/AboutTimeline';
 import { AboutCta } from '@/sections/about/AboutCta';
 
 export const AboutPage: React.FC = () => {
+  // Pure composition view: renders the eight about sections in fixed order.
   return (
     <main>
       <AboutHero />

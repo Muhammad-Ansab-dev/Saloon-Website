@@ -17,6 +17,7 @@ interface ServiceDetailPageProps {
   initialServices?: ServiceItem[];
 }
 
+// Shared fade-up entrance config reused by every content block on the page.
 const fadeUp = {
   initial: { opacity: 0, y: 24 },
   animate: { opacity: 1, y: 0 },
@@ -30,8 +31,10 @@ export const ServiceDetailPage: React.FC<ServiceDetailPageProps> = ({
   const { services } = useSiteContent(
     initialServices ? { services: initialServices } : undefined
   );
+  // Look up the requested service by its id.
   const service = services.find((service) => service.id === serviceId);
 
+  // Unknown id → friendly "not found" instead of a crash.
   if (!service) {
     return (
       <div className="svc-not-found">
@@ -41,6 +44,7 @@ export const ServiceDetailPage: React.FC<ServiceDetailPageProps> = ({
     );
   }
 
+  // Fallback image/alt chain: service fields → media entry → stock Cloudinary image.
   const image = service.image || (SERVICE_MEDIA[service.id]?.image ?? 'https://res.cloudinary.com/dittrfbja/image/upload/v1789650822/hair-salon/hero-1.webp');
   const alt = SERVICE_MEDIA[service.id]?.alt ?? service.name;
 

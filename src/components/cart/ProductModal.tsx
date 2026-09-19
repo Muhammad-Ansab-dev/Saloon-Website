@@ -30,23 +30,29 @@ export const ProductModal: React.FC<ProductModalProps> = ({
   onClose,
   onAddToCart,
 }) => {
+  // Quantity selector, which info tab is open, and the "ADDED TO BAG" state.
   const [qty, setQty] = useState(1);
   const [activeTab, setActiveTab] = useState<'overview' | 'ingredients' | 'howTo'>('overview');
   const [added, setAdded] = useState(false);
+  // Holds the auto-close timer so it can be cancelled when the modal closes early.
   const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  // Reset qty/tab/"added" whenever a different product opens the modal.
   useEffect(() => {
     setQty(1);
     setAdded(false);
     setActiveTab('overview');
   }, [product?.id]);
 
+  // Clear the pending auto-close timer if the modal unmounts.
   useEffect(() => () => {
     if (closeTimer.current) clearTimeout(closeTimer.current);
   }, []);
 
   if (!product) return null;
 
+  // Add the product to the cart, flash the "ADDED TO BAG" state, then
+  // auto-close the modal after ~1.2 s. Guarded against double clicks.
   const handleAdd = () => {
     if (added) return;
     onAddToCart(product, qty);
@@ -57,6 +63,7 @@ export const ProductModal: React.FC<ProductModalProps> = ({
     }, 1200);
   };
 
+  // Every product id maps 1:1 onto one of the four SVG bottle designs.
   const bottleType = product.id as
     | 'sos-conditioner'
     | 'light-shampoo'

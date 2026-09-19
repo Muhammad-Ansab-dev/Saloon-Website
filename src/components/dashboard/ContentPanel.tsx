@@ -35,6 +35,8 @@ const inputCls =
 const labelCls = 'block text-[11px] font-bold uppercase tracking-[0.15em] text-neutral-500 mb-1.5';
 
 export function ContentPanel() {
+  // Admin-fetched hero text rows, load/auth state, and the dirty/saving/
+  // saveMsg/saveError feedback trio around the Save button.
   const [rows, setRows] = useState<TextRow[]>([]);
   const [loadState, setLoadState] = useState<LoadState>('loading');
   const [dirty, setDirty] = useState(false);
@@ -42,6 +44,8 @@ export function ContentPanel() {
   const [saveMsg, setSaveMsg] = useState('');
   const [saveError, setSaveError] = useState('');
 
+  // Fetch the live hero text rows from the admin API (admin-only, so a network
+  // failure means "not signed in" → a lock screen is rendered instead).
   const load = useCallback(async () => {
     setLoadState('loading');
     try {
@@ -60,11 +64,13 @@ export function ContentPanel() {
     void load();
   }, [load]);
 
+  // Read a key's current value, falling back to the static default copy.
   const valueOf = useCallback(
     (key: string) => rows.find((r) => r.key === key)?.value ?? SITE_TEXT_DEFAULTS[key] ?? '',
     [rows]
   );
 
+  // Upsert one row (edit in place or insert a brand-new key) and mark dirty.
   const setValue = (key: string, value: string) => {
     setRows((prev) => {
       const existing = prev.find((r) => r.key === key);
@@ -76,6 +82,8 @@ export function ContentPanel() {
     setSaveError('');
   };
 
+  // PUT the whole (possibly merged) row set to /api/admin/siteTexts; on success
+  // clear the dirty flag so the button flips back to "Saved".
   const save = async () => {
     if (saving) return;
     setSaving(true);
@@ -100,6 +108,7 @@ export function ContentPanel() {
     }
   };
 
+  // Number of hero slide forms to render (comes from the static slide config).
   const totalSlides = useMemo(() => HERO_SLIDES.length, []);
 
   if (loadState === 'loading') {

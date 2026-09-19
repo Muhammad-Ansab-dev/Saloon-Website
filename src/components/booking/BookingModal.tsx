@@ -31,6 +31,8 @@ export const BookingModal: React.FC<BookingModalProps> = ({
   // Force a fresh form each time the modal opens (no stale selections).
   const [sessionKey, setSessionKey] = useState(0);
 
+  // Close the overlay and bump `sessionKey` so the next open builds a fresh,
+  // empty form (any previously-selected service/date/time is cleared).
   const handleClose = () => {
     setSessionKey((prevKey) => prevKey + 1);
     onClose();

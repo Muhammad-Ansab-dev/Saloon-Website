@@ -14,10 +14,13 @@ const STATS = [
   { value: 4, suffix: '', label: 'MASTER ARTISANS' },
 ];
 
-/* Animated counter: counts 0 → value when scrolled into view. */
+/* Animated counter: counts 0 → value when scrolled into view.
+   Runs a requestAnimationFrame loop that eases the count over ~1.8s. */
 const Counter: React.FC<{ value: number }> = ({ value }) => {
   const ref = useRef<HTMLSpanElement>(null);
+  // Fire once when the number enters ~80px inside the viewport.
   const inView = useInView(ref, { once: true, margin: '-80px' });
+  // The number currently shown while it counts up.
   const [count, setCount] = React.useState(0);
 
   React.useEffect(() => {
@@ -27,11 +30,13 @@ const Counter: React.FC<{ value: number }> = ({ value }) => {
     const duration = 1800;
     const tick = (now: number) => {
       const progress = Math.min((now - start) / duration, 1);
+      // Cubic ease-out: starts fast, slows near the target.
       const eased = 1 - Math.pow(1 - progress, 3);
       setCount(Math.round(value * eased));
       if (progress < 1) raf = requestAnimationFrame(tick);
     };
     raf = requestAnimationFrame(tick);
+    // Stop the loop if the component unmounts mid-count.
     return () => cancelAnimationFrame(raf);
   }, [inView, value]);
 

@@ -67,9 +67,10 @@ const STATUS_ROWS: { status: StatusKey; label: string; variant: 'outline' | 'sec
   { status: 'cancelled', label: 'Cancelled', variant: 'destructive' },
 ];
 
+// Formats a number as British pounds for the revenue stats.
 const gbp = (n: number) => '£' + n.toLocaleString('en-GB');
 
-// ── shared modal field styles (dark dashboard panels) ────────
+// The create/edit/delete modal uses these shared dark-theme field styles.
 const labelCls = 'block text-[10px] font-bold uppercase tracking-[0.2em] text-neutral-500 mb-1.5';
 const fieldCls =
   'w-full rounded-lg border border-neutral-700 bg-neutral-900 px-3 py-2 text-sm text-white outline-none transition-colors focus:border-white disabled:opacity-40 disabled:cursor-not-allowed';
@@ -78,6 +79,7 @@ const btnPrimary =
 const btnGhost =
   'inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors cursor-pointer';
 
+// A small labelled number box used inside each branch card's stats grid.
 function MiniStat({ label, value }: { label: string; value: string }) {
   return (
     <div className="rounded-lg border border-border bg-muted/40 px-3 py-2.5">
@@ -87,6 +89,9 @@ function MiniStat({ label, value }: { label: string; value: string }) {
   );
 }
 
+// One branch overview card: contact details (when a real branch row exists),
+// four mini-stats and a status-breakdown badge row. Edit/Delete appear only
+// for managed branches.
 function BranchCard({
   stat,
   branch,
@@ -156,6 +161,7 @@ function BranchCard({
   );
 }
 
+// Blank starting form used by the "New branch" modal.
 const EMPTY_FORM = {
   city: '',
   address: '',
@@ -167,6 +173,7 @@ const EMPTY_FORM = {
 };
 
 export function BranchesTab() {
+  // Source data for the whole tab, fetched together from the admin API.
   const [bookings, setBookings] = useState<BookingRow[]>([]);
   const [stylists, setStylists] = useState<StylistRow[]>([]);
   const [services, setServices] = useState<ServiceRow[]>([]);
@@ -175,6 +182,8 @@ export function BranchesTab() {
   const [error, setError] = useState('');
 
   // ── create / edit / delete modals ──────────────────────────
+  // formOpen = is the create/edit modal open; editing = the row being edited
+  // (null = "create new"); form holds the current field values.
   const [formOpen, setFormOpen] = useState(false);
   const [editing, setEditing] = useState<BranchRow | null>(null);
   const [form, setForm] = useState({ ...EMPTY_FORM });
@@ -182,10 +191,11 @@ export function BranchesTab() {
   const [saving, setSaving] = useState(false);
   const [formError, setFormError] = useState('');
   const [mutError, setMutError] = useState('');
-
+  // deleteTarget = the branch awaiting delete confirmation; deleting = in flight.
   const [deleteTarget, setDeleteTarget] = useState<BranchRow | null>(null);
   const [deleting, setDeleting] = useState(false);
 
+  // Fetch bookings, services, stylists and branch rows in parallel.
   const load = useCallback(async () => {
     setLoading(true);
     setError('');
@@ -214,11 +224,13 @@ export function BranchesTab() {
   }, []);
   useEffect(() => { load(); }, [load]);
 
+  // Fast lookup from service id → price, used when valuing each branch's revenue.
   const priceMap = useMemo(
     () => Object.fromEntries(services.map((s) => [s.id, s.price])),
     [services]
   );
 
+  // Open the modal opened ready for a NEW branch (blank form, no edit target).
   const openCreate = () => {
     setEditing(null);
     setForm({ ...EMPTY_FORM });
@@ -226,6 +238,8 @@ export function BranchesTab() {
     setFormOpen(true);
   };
 
+  // Same modal, but pre-filled from the branch being edited (fields only —
+  // the id/slug itself is never changed by this form, so PATCH by slug works).
   const openEdit = (b: BranchRow) => {
     setEditing(b);
     setForm({
@@ -241,6 +255,7 @@ export function BranchesTab() {
     setFormOpen(true);
   };
 
+  // Create (POST) or update (PATCH) the branch via the admin API, then reload.
   const saveForm = async () => {
     if (saving) return;
     setSaving(true);
@@ -274,6 +289,7 @@ export function BranchesTab() {
     }
   };
 
+  // DELETE the confirmed target branch, then reload so its card disappears.
   const confirmDelete = async () => {
     if (!deleteTarget || deleting) return;
     setDeleting(true);
@@ -295,6 +311,8 @@ export function BranchesTab() {
     }
   };
 
+  // Roll up every booking and stylist into one stat row per branch: counts by
+  // status, revenue (from the service price, £50 fallback), and unique clients.
   const cards = useMemo<BranchStat[]>(() => {
     const acc = new Map<string, { bookings: number; pending: number; confirmed: number; completed: number; cancelled: number; revenue: number; clients: Set<string> }>();
     for (const b of bookings) {
@@ -343,6 +361,8 @@ export function BranchesTab() {
     return ordered;
   }, [bookings, stylists, priceMap, branches]);
 
+  // Lookup from lowercased slug → the full branch row (so cards know whether a
+  // real managed branch exists and should show Edit/Delete).
   const branchBySlug = useMemo(() => new Map(branches.map((b) => [b.slug.toLowerCase(), b])), [branches]);
   const totalStylists = cards.reduce((s, c) => s + c.stylists, 0);
 

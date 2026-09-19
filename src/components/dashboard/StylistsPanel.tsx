@@ -23,6 +23,7 @@ import { SkeletonTableCard } from './Skeleton';
 
 type LoadState = 'loading' | 'ready' | 'error';
 
+// Thin fetch wrapper with consistent error surfacing (401 → sign-in message).
 async function api(path: string, init: RequestInit): Promise<Record<string, unknown>> {
   const res = await fetch(path, init);
   if (!res.ok) {
@@ -55,22 +56,26 @@ const STATIC_BRANCH_OPTIONS = LOCATIONS.map((l) => ({
 type StylistGroup = { key: string; label: string; stylists: SiteStylist[] };
 
 export function StylistsPanel({ branch }: { branch?: string }) {
+  // Root stylist collection + branch dropdown options, plus load/error/busy
+  // flags that drive the spinner banners and per-row spinners. When the panel
+  // is rendered inside a branch console (`branch` prop), only that branch's
+  // stylists are shown.
   const [stylists, setStylists] = useState<SiteStylist[]>([]);
   const [branchOptions, setBranchOptions] = useState(STATIC_BRANCH_OPTIONS);
   const [loadState, setLoadState] = useState<LoadState>('loading');
   const [mutError, setMutError] = useState('');
   const [busyId, setBusyId] = useState<string | null>(null);
-
+  // deleteTarget = the stylist awaiting delete confirmation.
   const [deleteTarget, setDeleteTarget] = useState<SiteStylist | null>(null);
   const [deleting, setDeleting] = useState(false);
-
+  // Edit-modal fields; editTarget being set means the edit modal is open.
   const [editTarget, setEditTarget] = useState<SiteStylist | null>(null);
   const [editName, setEditName] = useState('');
   const [editRole, setEditRole] = useState('');
   const [editImage, setEditImage] = useState('');
   const [editBranch, setEditBranch] = useState<string>('');
   const [savingEdit, setSavingEdit] = useState(false);
-
+  // Add-stylist modal fields.
   const [addOpen, setAddOpen] = useState(false);
   const [addName, setAddName] = useState('');
   const [addRole, setAddRole] = useState('');
@@ -78,6 +83,8 @@ export function StylistsPanel({ branch }: { branch?: string }) {
   const [addBranch, setAddBranch] = useState<string>(branchOptions[0]?.slug ?? '');
   const [adding, setAdding] = useState(false);
 
+  // Pull the live stylists and branch options from /api/content (merging any
+  // branches created in the Branches tab with the static fallback list).
   const load = useCallback(async () => {
     setLoadState('loading');
     try {
@@ -105,6 +112,8 @@ export function StylistsPanel({ branch }: { branch?: string }) {
     load();
   }, [load]);
 
+  // POST a new stylist (branch console pins the branch server-side), close the
+  // modal, reset the inputs, and refresh.
   const create = async () => {
     if (!addName.trim() || adding) return;
     setAdding(true);
@@ -132,6 +141,8 @@ export function StylistsPanel({ branch }: { branch?: string }) {
     }
   };
 
+  // PATCH only the fields the user actually edited; the branch is only sent when
+  // a superadmin changes it (branch consoles never overwrite the branch).
   const saveEdit = async () => {
     if (!editTarget || !editName.trim() || savingEdit) return;
     setSavingEdit(true);
@@ -161,6 +172,7 @@ export function StylistsPanel({ branch }: { branch?: string }) {
     }
   };
 
+  // DELETE the confirmed stylist, then refresh the roster.
   const remove = async () => {
     if (!deleteTarget || deleting) return;
     setDeleting(true);

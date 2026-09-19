@@ -12,6 +12,7 @@ export const AboutStory: React.FC = () => {
     <section className="bg-white py-20 sm:py-32 overflow-hidden">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-20 items-center">
+          // Left: studio image — springs in from the left while the photo itself parallax-scrolls.
           <div className="lg:col-span-5">
             <SpringReveal direction="left" distance={100} easing="spring" className="relative overflow-hidden shadow-2xl">
               <div className="relative h-[420px] sm:h-[520px]">

@@ -85,11 +85,13 @@ const PARTNER_ITEMS = [
 export const PartnerBar: React.FC = () => {
   return (
     <section className="relative bg-[#fce7ee] py-6 sm:py-7 border-y border-[#fae1e8] overflow-hidden">
-      {/* Soft gradient edge masks for luxury fade-in/fade-out */}
+      {/* Soft gradient edge masks so logos fade out at the sides instead of clipping */}
       <div className="pointer-events-none absolute inset-y-0 left-0 w-16 sm:w-28 bg-gradient-to-r from-[#fce7ee] to-transparent z-10" />
       <div className="pointer-events-none absolute inset-y-0 right-0 w-16 sm:w-28 bg-gradient-to-l from-[#fce7ee] to-transparent z-10" />
 
       <div className="w-full overflow-hidden flex">
+        {/* Infinite marquee: slides the whole strip left by 50% forever —
+            because the track is two identical copies, the loop is seamless. */}
         <motion.div
           className="flex items-center whitespace-nowrap will-change-transform opacity-85 hover:opacity-100 transition-opacity"
           animate={{ x: ['0%', '-50%'] }}

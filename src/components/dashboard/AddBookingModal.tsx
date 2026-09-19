@@ -43,6 +43,10 @@ export function AddBookingModal({ open, onClose, onCreated, branch }: AddBooking
   const { services, stylists, branches } = useSiteContent();
   // Live branches from the store; static LOCATIONS until the fetch resolves.
   const branchList = branches.length > 0 ? branches : staticBranches();
+  // Form fields: client details, the booked service/stylist/branch, date/time,
+  // notes, plus the saving/error states and availability lookups. takenSlots =
+  // time strings already booked for the selected date + stylist; availLoading
+  // drives a spinner while the availability check runs.
   const [clientName, setClientName] = useState('');
   const [clientEmail, setClientEmail] = useState('');
   const [clientPhone, setClientPhone] = useState('');
@@ -57,6 +61,8 @@ export function AddBookingModal({ open, onClose, onCreated, branch }: AddBooking
   const [takenSlots, setTakenSlots] = useState<Set<string>>(new Set());
   const [availLoading, setAvailLoading] = useState(false);
 
+  // Reset to a fresh form whenever the modal (re)opens — defaults pick the
+  // first service/stylist so the form is never in an unusable state.
   useEffect(() => {
     if (!open) return;
     setClientName(''); setClientEmail(''); setClientPhone('');
@@ -64,6 +70,7 @@ export function AddBookingModal({ open, onClose, onCreated, branch }: AddBooking
     setBranchSel(branch ?? ''); setNotes(''); setError(''); setSaving(false); setTakenSlots(new Set());
   }, [open]);
 
+  // Every bookable time for the chosen weekday (day-of-week from the date).
   const slots = useMemo(
     () => (date ? generateTimeSlots(new Date(date + 'T12:00:00').getDay()) : []),
     [date]
@@ -75,6 +82,9 @@ export function AddBookingModal({ open, onClose, onCreated, branch }: AddBooking
     [slots, takenSlots]
   );
 
+  // Re-query the availability API whenever the date or stylist changes; a
+  // `cancelled` flag keeps a stale, in-flight response from overwriting newer
+  // results after the request 1-2 races.
   useEffect(() => {
     if (!date || !stylistName) { setTakenSlots(new Set()); return; }
     let cancelled = false;
@@ -95,6 +105,7 @@ export function AddBookingModal({ open, onClose, onCreated, branch }: AddBooking
 
   if (!open) return null;
 
+  // A booking can only be submitted once every required field is filled in.
   const canSave =
     clientName.trim().length > 0 &&
     clientEmail.trim().length > 0 &&
@@ -102,6 +113,8 @@ export function AddBookingModal({ open, onClose, onCreated, branch }: AddBooking
     date.length > 0 &&
     time.length > 0;
 
+  // POST the booking to the public endpoint (it de-dupes/409s on clashes), then
+  // hand the created row back to the parent so the list updates immediately.
   const submit = async () => {
     if (saving || !canSave) return;
     setSaving(true);

@@ -10,6 +10,7 @@ import type { TooltipValueType } from "recharts"
 // Format: { THEME_NAME: CSS_SELECTOR }
 const THEMES = { light: "", dark: ".dark" } as const
 
+// Fallback dimensions the chart renders at before real layout is measured.
 const INITIAL_DIMENSION = { width: 320, height: 200 } as const
 type TooltipNameType = number | string
 
@@ -28,6 +29,8 @@ type ChartContextProps = {
   config: ChartConfig
 }
 
+// Shares the ChartConfig with tooltip/legend content so each series' color
+// and label can be resolved from the config by dataKey.
 const ChartContext = React.createContext<ChartContextProps | null>(null)
 
 function useChart() {
@@ -57,6 +60,8 @@ function ChartContainer({
     height: number
   }
 }) {
+  // Stable, per-instance chart id ("chart-" + useId) that both the injected
+  // CSS variables and the recharts tree attach to.
   const uniqueId = React.useId()
   const chartId = `chart-${id ?? uniqueId.replace(/:/g, "")}`
 
@@ -82,6 +87,9 @@ function ChartContainer({
   )
 }
 
+// Renders <style> tags that inject `--color-<key>` CSS variables for every
+// configured series (light and dark variants). Recharts strokes/fills reference
+// these vars (e.g. "var(--color-revenue)"), so all theming lives in one map.
 const ChartStyle = ({ id, config }: { id: string; config: ChartConfig }) => {
   const colorConfig = Object.entries(config).filter(
     ([, config]) => config.theme ?? config.color
@@ -147,6 +155,8 @@ function ChartTooltipContent({
   >) {
   const { config } = useChart()
 
+  // Resolves the tooltip's heading text: the friendly label configured for the
+  // hovered series (or a custom labelFormatter if provided).
   const tooltipLabel = React.useMemo(() => {
     if (hideLabel || !payload?.length) {
       return null
@@ -328,6 +338,9 @@ function ChartLegendContent({
   )
 }
 
+// Looks up the ChartConfig entry for a tooltip/legend payload item. Handles
+  // both the top-level key and keys nested inside the payload's `payload`
+  // object (common with recharts stacked/composed series).
 function getPayloadConfigFromPayload(
   config: ChartConfig,
   payload: unknown,

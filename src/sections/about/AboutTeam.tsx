@@ -38,6 +38,7 @@ export const AboutTeam: React.FC = () => {
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 sm:gap-8 lg:gap-10">
           {stylists.map((stylist, idx) => (
+            // Two-column gallery; cards alternate entrance direction with a small stagger.
             <SpringReveal
               key={stylist.id}
               direction={idx % 2 === 0 ? 'left' : 'right'}

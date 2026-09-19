@@ -1,11 +1,15 @@
 'use client';
 // ─────────────────────────────────────────────────────────────
-// Route: /dashboard — the admin console. Protected by middleware
-// (unauthenticated visitors are redirected to /dashboard/login).
-// A fixed left rail switches between five tabs: Overview, Bookings,
-// Services, Stylists and Media — each rendered by its own component
-// in components/dashboard/. Site chrome (Header/Footer/FloatingWidget)
-// is intentionally suppressed by Providers on this route.
+// DASHBOARD ROUTE ("/dashboard") — the superadmin control center.
+// What it does: draws the fixed left rail (nav + search + account menu)
+// and switches the main area between the per-tab panel components.
+// What it connects to: middleware protection (unauthenticated visitors are
+// redirected to /dashboard/login), src/components/dashboard/* panels for
+// each tab, and DELETE /api/auth/login for sign-out.
+// Why it exists: one shell page; the tabs are just different components
+// mounted in the same layout. Providers suppresses the public site chrome
+// (Header/Footer/FloatingWidget) on this route.
+// NOTE: the account name/e-mail in the sidebar is display-only.
 // ─────────────────────────────────────────────────────────────
 
 import React, { useState } from 'react';
@@ -36,10 +40,13 @@ import { BookingTab } from '@/components/dashboard/BookingTab';
 import { OverviewTab } from '@/components/dashboard/OverviewTab';
 import { BranchesTab } from '@/components/dashboard/BranchesTab';
 import { ContentPanel } from '@/components/dashboard/ContentPanel';
+import { NotificationsPanel } from '@/components/dashboard/NotificationsPanel';
 
-// ── Dashboard state (real data lives in OverviewTab / BookingTab) ─────────
-type DashboardTab = 'overview' | 'bookings' | 'services' | 'stylists' | 'media' | 'branches' | 'content';
+// ── Dashboard state ──
+// Which of the eight tabs is currently open. Real data lives inside each panel.
+type DashboardTab = 'overview' | 'bookings' | 'services' | 'stylists' | 'media' | 'branches' | 'content' | 'notifications';
 
+// The left rail's nav list — id drives which panel renders; label is the button text.
 const NAV: { id: DashboardTab; label: string; enabled: boolean }[] = [
   { id: 'overview', label: 'Overview', enabled: true },
   { id: 'bookings', label: 'Bookings', enabled: true },
@@ -50,8 +57,10 @@ const NAV: { id: DashboardTab; label: string; enabled: boolean }[] = [
   // Content editing is superadmin-only — branch managers never reach this
   // page (middleware bounces them to their own branch console).
   { id: 'content', label: 'Content', enabled: true },
+  { id: 'notifications', label: 'Notifications', enabled: true },
 ];
 
+// Human-readable title for each tab, shown in the page-header strip.
 const TAB_LABEL: Record<DashboardTab, string> = {
   overview: 'Overview',
   bookings: 'Booking Analysis',
@@ -60,12 +69,18 @@ const TAB_LABEL: Record<DashboardTab, string> = {
   media: 'Media Library',
   branches: 'Branches',
   content: 'Content Editor',
+  notifications: 'Notifications',
 };
 
+// Main dashboard component (client-side). Renders the left rail + the panel
+// for the currently selected tab. No props — state is internal.
+// Sign-out: DELETE /api/auth/login clears the session cookie, then we
+// navigate back to the login page.
 export default function DashboardPage() {
   const [tab, setTab] = useState<DashboardTab>('overview');
   const router = useRouter();
 
+  // Clear the httpOnly session cookie and send the user back to the login screen.
   const signOut = async () => {
     await fetch('/api/auth/login', { method: 'DELETE' });
     router.replace('/dashboard/login');
@@ -74,6 +89,7 @@ export default function DashboardPage() {
     <div className="dark h-screen overflow-hidden bg-background text-foreground">
       {/* Fixed left rail — always visible */}
       <aside className="fixed top-0 left-0 bottom-0 w-64 z-50 flex flex-col border-r border-border bg-card">
+        {/* Brand mark linking back to the public site */}
         <div className="px-4 pt-5 pb-4">
           <Link href="/" className="flex items-center gap-2">
             <span className="flex items-center justify-center w-7 h-7 rounded-md bg-primary text-primary-foreground text-[11px] font-black tracking-tight">
@@ -82,6 +98,7 @@ export default function DashboardPage() {
             <span className="font-semibold text-sm">Paul Hair Studio</span>
           </Link>
         </div>
+        {/* Tab switcher — clicking a button tells React which panel to show */}
         <nav className="px-3 flex flex-col gap-1">
           {NAV.map((item) => {
             const active = tab === item.id;
@@ -102,6 +119,8 @@ export default function DashboardPage() {
             );
           })}
         </nav>
+        {/* Account menu + search, pinned to the bottom of the rail.
+            Search box is display-only in the current build. */}
         <div className="mt-auto p-3">
           <div className="relative">
             <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
@@ -132,10 +151,11 @@ export default function DashboardPage() {
         </div>
       </aside>
 
+      {/* Main content area — offset left by the 256px rail */}
       <main className="ml-64 h-screen flex flex-col px-4 sm:px-6 lg:px-8 py-4">
         <div className="mx-auto w-full h-full max-w-[1500px] flex flex-col gap-4 min-h-0">
 
-          {/* Box 2 — page header strip */}
+          {/* Page header strip: breadcrumb + tab title + Export button */}
           <div className="shrink-0 flex flex-wrap items-center justify-between gap-3">
             <div>
               <p className="text-xs text-muted-foreground">
@@ -150,6 +170,7 @@ export default function DashboardPage() {
             </div>
           </div>
 
+          {/* Render the one panel matching the selected tab; bookings is the default */}
           {tab === 'bookings' ? (
             <div className="flex-1 min-h-0 flex flex-col">
               <BookingTab />
@@ -173,6 +194,10 @@ export default function DashboardPage() {
           ) : tab === 'content' ? (
             <div className="flex-1 min-h-0 overflow-y-auto">
               <ContentPanel />
+            </div>
+          ) : tab === 'notifications' ? (
+            <div className="flex-1 min-h-0 flex flex-col">
+              <NotificationsPanel />
             </div>
           ) : (
             <div className="flex-1 min-h-0 flex flex-col">

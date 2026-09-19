@@ -20,6 +20,8 @@ interface ShortVideo {
   player: string;
 }
 
+// Convert the raw gallery videos from galleryData.ts into display-ready
+// "Short" cards: attach a poster image path and a sound-enabled YouTube embed URL.
 const VIDEOS: ShortVideo[] = GALLERY_VIDEOS.map((video) => ({
   id: video.id,
   title: video.title,
@@ -30,9 +32,12 @@ const VIDEOS: ShortVideo[] = GALLERY_VIDEOS.map((video) => ({
 }));
 
 export const GalleryPage: React.FC = () => {
+  // Which category filter pill is active ('ALL' shows every video).
   const [activeCategory, setActiveCategory] = useState('ALL');
+  // The video currently open in the lightbox (null = lightbox closed).
   const [selectedVideo, setSelectedVideo] = useState<ShortVideo | null>(null);
 
+  // The filtered list of videos shown in the grid based on the active pill.
   const visible =
     activeCategory === 'ALL'
       ? VIDEOS
@@ -120,8 +125,9 @@ export const GalleryPage: React.FC = () => {
         </AnimatePresence>
       </div>
 
-      {/* Video Lightbox */}
-      <AnimatePresence>
+{/* Video Lightbox — full-screen overlay; backdrop or X taps it away, the
+            inner box swallows clicks so only the backdrop closes it */}
+        <AnimatePresence>
         {selectedVideo && (
           <motion.div
             initial={{ opacity: 0 }}

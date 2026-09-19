@@ -1,8 +1,14 @@
 // ─────────────────────────────────────────────────────────────
-// POST /api/auth/login  — exchange admin credentials for a signed
-//   session cookie. Failures are rate-limited per client IP.
-// DELETE /api/auth/login — clear the session cookie (logout).
-// Consumed by the dashboard login form.
+// LOGIN / LOGOUT API ("/api/auth/login") — the door to the dashboard.
+// What it does: verifies admin/branch credentials, hands out a signed
+// session cookie, and (on DELETE) clears it.
+// What it connects to: src/lib/auth.ts (authenticate, session cookies) and
+// src/lib/store.ts (to include DB-created branch manager accounts).
+// Why it exists: the login form on /dashboard/login posts here; the cookie
+// it sets unlocks all of /api/admin/* and /dashboard.
+// Security: fail-too-many-guesses are rate-limited per client IP
+// (8 attempts per minute), every comparison runs in constant time, and the
+// cookie is httpOnly (JavaScript can never read it).
 // ─────────────────────────────────────────────────────────────
 import { NextResponse } from 'next/server';
 import {
@@ -13,23 +19,32 @@ import {
 } from '@/lib/auth';
 import { getCollection } from '@/lib/store';
 
+// Rate limiting: a fixed 60-second window caps login tries per client,
+// and we remember at most 5000 clients so the map cannot grow forever.
 const RATE_LIMIT_WINDOW_MS = 60_000;
 const RATE_LIMIT_MAX_ATTEMPTS = 8;
 const MAX_TRACKED_CLIENTS = 5_000;
 
+// In-memory attempt tracker: client key → {count, resetAt}.
 const attempts = new Map<string, { count: number; resetAt: number }>();
 
+// Identify the client by IP — the first x-forwarded-for entry when present
+// (behind a proxy), otherwise "unknown".
 function clientKey(request: Request): string {
   const forwarded = request.headers.get('x-forwarded-for');
   return forwarded?.split(',')[0]?.trim() || 'unknown';
 }
 
-/** Fixed-window limiter. Returns the seconds to wait, or 0 when allowed. */
+// Fixed-window rate limiter. Params: the client key.
+// Returns: seconds the caller must wait (0 = allowed).
+// Logic: a fresh window stores count 1; once count hits the max, further
+// attempts are refused until the window resets.
 function rateLimit(key: string): number {
   const now = Date.now();
   const entry = attempts.get(key);
   if (!entry || entry.resetAt <= now) {
     if (attempts.size >= MAX_TRACKED_CLIENTS) {
+      // Map is full — drop every expired window before recording a new one.
       for (const [k, v] of attempts) if (v.resetAt <= now) attempts.delete(k);
     }
     attempts.set(key, { count: 1, resetAt: now + RATE_LIMIT_WINDOW_MS });
@@ -42,7 +57,11 @@ function rateLimit(key: string): number {
   return 0;
 }
 
+// POST — login. Params: request with {username, password} JSON.
+// Returns: {ok:true, redirect} + the session cookie on success, or a
+// 401 (bad credentials) / 429 (rate-limited) / 400 (bad body) error.
 export async function POST(request: Request) {
+  // Block early if this IP has exhausted its attempts for the current window.
   const retryAfter = rateLimit(clientKey(request));
   if (retryAfter > 0) {
     return NextResponse.json(
@@ -86,6 +105,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Invalid username or password' }, { status: 401 });
   }
 
+  // Mint the signed session cookie and send it to the browser (httpOnly).
   const token = await createSessionToken(claim);
   const redirect = claim.role === 'branch' ? `/dashboard/branch/${claim.branch}` : '/dashboard';
   const res = NextResponse.json({ ok: true, redirect });
@@ -93,6 +113,8 @@ export async function POST(request: Request) {
   return res;
 }
 
+// DELETE — sign out. Params: none (request ignored).
+// Returns: {ok:true} after clearing/expiring the session cookie.
 export async function DELETE() {
   const res = NextResponse.json({ ok: true });
   res.headers.set('Set-Cookie', clearSessionCookie());

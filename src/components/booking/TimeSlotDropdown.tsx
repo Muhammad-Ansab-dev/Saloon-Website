@@ -24,6 +24,7 @@ export const TimeSlotDropdown: React.FC<TimeSlotDropdownProps> = ({
   slots,
   loading = false,
 }) => {
+  // Whether the slot list popup is open; wrapRef lets us detect outside clicks.
   const [open, setOpen] = useState(false);
   const wrapRef = React.useRef<HTMLDivElement>(null);
 
@@ -47,6 +48,8 @@ export const TimeSlotDropdown: React.FC<TimeSlotDropdownProps> = ({
     return () => document.removeEventListener('keydown', onKey);
   }, [open]);
 
+  // The trigger is disabled while fetching or when nothing is bookable; its
+  // label shows the chosen time, "Loading…", or a placeholder.
   const disabled = loading || slots.length === 0;
   const display = loading ? 'Loading…' : value || 'Select a time';
 

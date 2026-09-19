@@ -16,14 +16,17 @@ interface ServicesIdViewProps {
 }
 
 export function ServicesIdView({ id, initialServices }: ServicesIdViewProps) {
+  // Wire the booking modal straight from the global context so "Book now" works here.
   const { onSelectServiceForBooking } = useSite();
   const { services } = useSiteContent({ services: initialServices });
 
+  // Resolve the URL param: first try matching a service ID, then a category slug.
   const service = services.find((service: ServiceItem) => service.id === id);
   const category = services.find(
     (s: ServiceItem) => categorySlug(s.category) === id
   )?.category;
 
+  // Slug matched → show that category's full service list (workflow step 2).
   if (category) {
     return (
       <ServicesByCategory
@@ -34,6 +37,7 @@ export function ServicesIdView({ id, initialServices }: ServicesIdViewProps) {
     );
   }
 
+  // ID matched → show that single service's detail page (workflow step 3).
   if (service) {
     return (
       <ServiceDetailPage
@@ -44,6 +48,7 @@ export function ServicesIdView({ id, initialServices }: ServicesIdViewProps) {
     );
   }
 
+  // Neither matched → friendly 404 with a way back to /services.
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-[#f7f5ee] px-6 text-center">
       <p className="text-[11px] tracking-[0.3em] uppercase text-neutral-500 mb-4">

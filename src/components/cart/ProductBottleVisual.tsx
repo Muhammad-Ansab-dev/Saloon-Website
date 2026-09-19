@@ -1,9 +1,12 @@
 'use client';
+// ─────────────────────────────────────────────────────────────
 // ProductBottleVisual — Pure SVG illustration of the salon's 4 haircare product
 // bottles (SOS Conditioner, Light Shampoo, Silk Serum, Leave-In Cream). Each
 // variant renders a hand-crafted bottle shape with labels, specular highlights,
-// and a drop shadow. Scales up on hover via the isHovered prop. Used inside
-// BestSellers to display product visuals without raster images.
+// and a drop shadow. Scales up on hover via the isHovered prop. Used wherever
+// a product needs a visual without raster images: the homepage BestSellers,
+// the cart drawer and the product modal.
+// ─────────────────────────────────────────────────────────────
 
 interface ProductBottleVisualProps {
   type: 'sos-conditioner' | 'light-shampoo' | 'silk-serum' | 'leave-in-cream';
@@ -16,6 +19,7 @@ export const ProductBottleVisual: React.FC<ProductBottleVisualProps> = ({
   className = 'h-72 w-auto',
   isHovered = false,
 }) => {
+  // The wrapper scales the entire bottle up when hovered (used in BestSellers).
   return (
     <div className={`relative flex items-center justify-center transition-transform duration-500 ${isHovered ? 'scale-105' : 'scale-100'} ${className}`}>
       {type === 'sos-conditioner' && (

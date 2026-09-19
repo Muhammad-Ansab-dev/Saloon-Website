@@ -23,7 +23,7 @@ export const FloatingWidget: React.FC<FloatingWidgetProps> = ({
 }) => {
   return (
     <aside aria-label="Quick Actions" className="fixed right-3 sm:right-6 top-1/2 -translate-y-1/2 z-40 flex flex-col gap-2.5">
-      {/* Booking Quick Bubble */}
+      {/* Booking Quick Bubble — bobs up/down forever; the fading ring is a pulse "ripple" */}
       <motion.button
         id="floating-booking-btn"
         animate={{ y: [0, -10, 0] }}
@@ -35,6 +35,7 @@ export const FloatingWidget: React.FC<FloatingWidgetProps> = ({
         aria-label="Book appointment"
         title="Schedule appointment"
       >
+        {/* Expanding ring behind the icon — loops scale+opacity to mimic a pulsing radar */}
         <motion.span
           aria-hidden
           className="absolute inset-0 rounded-full border-2 border-black"

@@ -111,10 +111,15 @@ function GroupCard({
 }
 
 export function MediaPanel() {
+  // The four collections the admin API returns (siteImages, services, stylists,
+  // gallery), the auth state (gates the whole tab behind a sign-in), and the
+  // most recent save error shown as a banner.
   const [data, setData] = useState<MediaData | null>(null);
   const [auth, setAuth] = useState<'loading' | 'ok' | 'denied'>('loading');
   const [saveError, setSaveError] = useState('');
 
+  // Fetch all four collections in parallel from the admin endpoints. Because
+  // these are admin-only, failure signals "not signed in" → auth = denied.
   const load = useCallback(async () => {
     setSaveError('');
     setAuth('loading');
@@ -141,6 +146,8 @@ export function MediaPanel() {
     void load();
   }, [load]);
 
+  // Fire-and-forget whole-collection save via PUT /api/admin/<col>; failures
+  // land in saveError so the user sees them instead of silent data loss.
   async function persist(col: string, items: unknown[]) {
     try {
       const res = await fetch(`/api/admin/${col}`, {
@@ -157,6 +164,7 @@ export function MediaPanel() {
     }
   }
 
+  // Update (or insert) a named site image, persist the new array optimistic-style.
   function setSiteImage(key: string, value: string) {
     if (!data) return;
     const next: MediaData = {
@@ -171,6 +179,7 @@ export function MediaPanel() {
     void persist('siteImages', next.siteImages);
   }
 
+  // Replace a single service's image and persist.
   function setServiceImage(id: string, value: string) {
     if (!data) return;
     const next: MediaData = {
@@ -181,6 +190,7 @@ export function MediaPanel() {
     void persist('services', next.services);
   }
 
+  // Replace a single stylist's portrait and persist.
   function setStylistImage(id: string, value: string) {
     if (!data) return;
     const next: MediaData = {
@@ -191,6 +201,7 @@ export function MediaPanel() {
     void persist('stylists', next.stylists);
   }
 
+  // Swap one gallery tile's image and persist.
   function setGalleryImage(index: number, value: string) {
     if (!data) return;
     const next: MediaData = {
@@ -201,6 +212,7 @@ export function MediaPanel() {
     void persist('gallery', next.gallery);
   }
 
+  // Append a blank gallery tile (to be filled with an image immediately after).
   function addGalleryItem() {
     if (!data) return;
     const next: MediaData = {
@@ -211,6 +223,7 @@ export function MediaPanel() {
     void persist('gallery', next.gallery);
   }
 
+  // Remove a gallery tile by position and persist the shorter array.
   function deleteGalleryItem(index: number) {
     if (!data) return;
     const next: MediaData = {

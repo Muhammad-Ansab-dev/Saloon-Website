@@ -39,7 +39,7 @@ export const VisitUs: React.FC = () => {
               </p>
             </ScrollReveal>
 
-            {/* Branches: Zurich & Paris */}
+            {/* Branches: Zurich & Paris — each slides in from its own side */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-8 sm:gap-10">
               {branchList.map((loc, idx) => (
                 <SpringReveal

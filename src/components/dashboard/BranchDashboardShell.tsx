@@ -13,19 +13,22 @@ import { ArrowLeft, LogOut } from 'lucide-react';
 import { OverviewTab } from './OverviewTab';
 import { BookingTab } from './BookingTab';
 import { StylistsPanel } from './StylistsPanel';
+import { NotificationsPanel } from './NotificationsPanel';
 
-type BranchView = 'overview' | 'bookings' | 'stylists';
+type BranchView = 'overview' | 'bookings' | 'stylists' | 'notifications';
 
 const NAV: { id: BranchView; label: string }[] = [
   { id: 'overview', label: 'Overview' },
   { id: 'bookings', label: 'Bookings' },
   { id: 'stylists', label: 'Stylists' },
+  { id: 'notifications', label: 'Notifications' },
 ];
 
 const TAB_LABEL: Record<BranchView, string> = {
   overview: 'Overview',
   bookings: 'Booking Analysis',
   stylists: 'Stylists',
+  notifications: 'Notifications',
 };
 
 export function BranchDashboardShell({
@@ -35,9 +38,11 @@ export function BranchDashboardShell({
   branchId: string;
   branchName: string;
 }) {
+  // Which of the branch console's screens is currently shown.
   const [view, setView] = useState<BranchView>('overview');
   const router = useRouter();
 
+  // Call the auth logout endpoint, then send the user back to the login page.
   const signOut = async () => {
     await fetch('/api/auth/login', { method: 'DELETE' });
     router.replace('/dashboard/login');
@@ -104,6 +109,10 @@ export function BranchDashboardShell({
           {view === 'bookings' ? (
             <div className="flex-1 min-h-0 flex flex-col">
               <BookingTab branch={branchId} />
+            </div>
+          ) : view === 'notifications' ? (
+            <div className="flex-1 min-h-0 flex flex-col">
+              <NotificationsPanel branch={branchId} />
             </div>
           ) : view === 'stylists' ? (
             <div className="flex-1 min-h-0">

@@ -13,9 +13,11 @@ import confetti from 'canvas-confetti';
 import { ScrollReveal, SpringReveal } from '../../components/ui/ScrollReveal';
 
 export const NewsletterSubscribe: React.FC = () => {
+  // The typed email address and whether the "thank you" state is showing.
   const [email, setEmail] = useState('');
   const [isSubmitted, setIsSubmitted] = useState(false);
 
+  // On submit: validate, show the confirmation, fire confetti, then auto-reset after 4s.
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!email || !email.includes('@')) return;

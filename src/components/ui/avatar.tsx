@@ -16,6 +16,8 @@ function Avatar({
     <AvatarPrimitive.Root
       data-slot="avatar"
       data-size={size}
+      // An invisible "after" ring with a blend mode guarantees the circular
+      // avatar never visually melts into whatever background sits behind it.
       className={cn(
         "group/avatar relative flex size-8 shrink-0 rounded-full select-none after:absolute after:inset-0 after:rounded-full after:border after:border-border after:mix-blend-darken data-[size=lg]:size-10 data-[size=sm]:size-6 dark:after:mix-blend-lighten",
         className
@@ -70,6 +72,8 @@ function AvatarBadge({ className, ...props }: React.ComponentProps<"span">) {
   )
 }
 
+// Group = a row of overlapping avatars; members are pulled together with
+// negative horizontal spacing and a ring so heads stay distinct.
 function AvatarGroup({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div

@@ -6,7 +6,13 @@
 // editorial films (ordered 01–06); VIDEO_POSTERS maps each film
 // id to its Cloudinary poster. Consumed by views/GalleryPage.tsx
 // and sections/home/LookbookTrio.tsx.
+// In plain words: the gallery page's photos, the filter button labels
+// ("Cutting / Colour / …"), and the six short editorial films — all static
+// starter content (admins can swap the photos from the dashboard).
 // ─────────────────────────────────────────────────────────────
+
+// One gallery photo: the image URL, an accessibility description (`alt`), a
+// short caption, and the filter category the photo belongs to.
 export interface GalleryItem {
   image: string;
   alt: string;
@@ -14,9 +20,12 @@ export interface GalleryItem {
   category: string;
 }
 
+// The filter pills on the gallery page: 'ALL' shows everything, the rest
+// match each photo's `category` tag.
 export const GALLERY_CATEGORIES = ['ALL', 'CUTTING', 'COLOUR', 'STYLING', 'SALON'];
 
-/** Cloudinary URLs for the short-film posters (uploaded via scripts/migrate-cloudinary.mjs). */
+// Cloudinary URLs for each film's cover poster, keyed by the film's YouTube
+// id (uploaded via scripts/migrate-cloudinary.mjs).
 export const VIDEO_POSTERS: Record<string, string> = {
   'rr7ACX0M_0c': 'https://res.cloudinary.com/dittrfbja/image/upload/v1789651056/hair-salon/rr7ACX0M_0c.webp',
   'j3L5MsVY3oE': 'https://res.cloudinary.com/dittrfbja/image/upload/v1789651401/hair-salon/j3L5MsVY3oE.webp',
@@ -26,6 +35,8 @@ export const VIDEO_POSTERS: Record<string, string> = {
   'IUC_K7ZT0I0': 'https://res.cloudinary.com/dittrfbja/image/upload/v1789651034/hair-salon/IUC_K7ZT0I0.webp',
 };
 
+// One of the six short films: its YouTube id, display title, style tag, and
+// filter category (used to decide which film shows under which filter).
 export interface GalleryVideo {
   id: string;
   title: string;
@@ -33,6 +44,8 @@ export interface GalleryVideo {
   category: string;
 }
 
+// The six editorial films shown on the gallery page's video strip, ordered
+// 01–06.
 export const GALLERY_VIDEOS: GalleryVideo[] = [
   { id: 'rr7ACX0M_0c', title: 'EDITORIAL FILM 01', style: 'Precision cutting', category: 'CUTTING' },
   { id: 'j3L5MsVY3oE', title: 'EDITORIAL FILM 02', style: 'Salon ritual', category: 'SALON' },
@@ -42,6 +55,8 @@ export const GALLERY_VIDEOS: GalleryVideo[] = [
   { id: 'IUC_K7ZT0I0', title: 'EDITORIAL FILM 06', style: 'Salon ritual', category: 'SALON' },
 ];
 
+// The gallery photo pool — each item feeds a card on /gallery and the
+// homepage lookbook trio.
 export const GALLERY_ITEMS: GalleryItem[] = [
   {
     image: 'https://res.cloudinary.com/dittrfbja/image/upload/v1789651071/hair-salon/hair-gallery1.webp',

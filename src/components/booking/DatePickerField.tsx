@@ -17,16 +17,21 @@ interface DatePickerFieldProps {
 }
 
 export const DatePickerField: React.FC<DatePickerFieldProps> = ({ value, onChange }) => {
+  // Whether the calendar popup is open, and which month/year it is currently
+  // browsing (opened centred on the already-chosen value).
   const [open, setOpen] = useState(false);
   const [viewYear, setViewYear] = useState(() => new Date(value + 'T12:00:00').getFullYear());
   const [viewMonth, setViewMonth] = useState(() => new Date(value + 'T12:00:00').getMonth());
 
+  // Today's year/month bound the navigation: you cannot browse into the past.
   const now = new Date();
   const currentYear = now.getFullYear();
   const currentMonth = now.getMonth();
 
+  // Ref to the popup wrapper, so clicks outside of it can close the calendar.
   const wrapRef = React.useRef<HTMLDivElement>(null);
 
+  // Close the popup when the user clicks anywhere outside of the calendar.
   React.useEffect(() => {
     if (!open) return;
     const onMouseDown = (e: MouseEvent) => {
@@ -94,7 +99,10 @@ export const DatePickerField: React.FC<DatePickerFieldProps> = ({ value, onChang
 
           {/* Day grid */}
           <div className="grid grid-cols-7">
+            {/* Render every day of the current month grid. */}
             {monthCells(viewYear, viewMonth).map((d) => {
+              // Per-cell flags: past days are disabled, today gets a ring, and
+              // the already-chosen day is highlighted in black.
               const iso = toISODate(d);
               const inMonth = d.getMonth() === viewMonth;
               const today = todayISO();

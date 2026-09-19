@@ -99,6 +99,8 @@ export const ScrollReveal: React.FC<ScrollRevealProps> = ({
   onMouseEnter,
   onMouseLeave,
 }) => {
+  // Tracks how far this element has crossed the viewport: 0 = just entering the
+  // reveal window, 1 = fully past it. Drives all the animated values below.
   const ref = useRef<HTMLDivElement>(null);
   const { scrollYProgress } = useScroll({
     target: ref,
@@ -107,6 +109,8 @@ export const ScrollReveal: React.FC<ScrollRevealProps> = ({
 
   const { x0, y0 } = resolveXY(direction, distance);
 
+  // Turn the raw scroll progress into live CSS values (opacity, travel,
+  // scaleY/rotate/scale) so the reveal is scrubbed as the user scrolls.
   const opacity = useTransform(scrollYProgress, [0, 1], [fromOpacity, 1]);
   const y = useTransform(scrollYProgress, [0, 1], [y0, 0]);
   const x = useTransform(scrollYProgress, [0, 1], [x0, 0]);
@@ -219,6 +223,8 @@ export const Parallax: React.FC<ParallaxProps> = ({
     offset: ['start end', 'end start'],
   });
 
+  // The viewport crossing drives parallax: the element drifts from +amount to
+  // -amount vertically (and optionally horizontally) as it scrolls through.
   const y = useTransform(scrollYProgress, [0, 1], [amount, -amount]);
   const x = horizontal !== 0
     ? useTransform(scrollYProgress, [0, 1], [horizontal, -horizontal])

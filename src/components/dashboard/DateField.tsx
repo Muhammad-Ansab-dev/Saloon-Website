@@ -17,15 +17,21 @@ interface DateFieldProps {
   label?: string;
   /** Inline mode renders the calendar grid directly (no trigger button), used by the Custom range picker. */
   inline?: boolean;
+  /** Earliest selectable date ("YYYY-MM-DD"). Earlier days render disabled. */
+  minDate?: string;
 }
 
-export const DateField: React.FC<DateFieldProps> = ({ value, onChange, placeholder = 'Pick a date', label, inline = false }) => {
+export const DateField: React.FC<DateFieldProps> = ({ value, onChange, placeholder = 'Pick a date', label, inline = false, minDate }) => {
+  // Whether the popup calendar is open, plus the month/year it is browsing.
+  // `base` = the selected value (or today) the calendar opens centred on.
   const [open, setOpen] = useState(false);
   const base = value || todayISO();
   const [viewYear, setViewYear] = useState(() => new Date(base + 'T12:00:00').getFullYear());
   const [viewMonth, setViewMonth] = useState(() => new Date(base + 'T12:00:00').getMonth());
+  // Ref to the popup wrapper, so outside clicks can close it (not used inline).
   const wrapRef = useRef<HTMLDivElement>(null);
 
+  // Close the popup when clicking outside it (inline mode always stays open).
   useEffect(() => {
     if (!open || inline) return;
     const onMouseDown = (e: MouseEvent) => {
@@ -35,6 +41,8 @@ export const DateField: React.FC<DateFieldProps> = ({ value, onChange, placehold
     return () => document.removeEventListener('mousedown', onMouseDown);
   }, [open]);
 
+  // Nudge the browsed month backward (-1) or forward (+1), normalising year
+  // rollovers automatically via the Date constructor.
   const step = (delta: number) => {
     const d = new Date(viewYear, viewMonth + delta, 1);
     setViewYear(d.getFullYear());
@@ -85,17 +93,26 @@ export const DateField: React.FC<DateFieldProps> = ({ value, onChange, placehold
           </div>
 
           <div className="grid grid-cols-7 gap-0.5">
+{/* Render the month grid. */}
             {monthCells(viewYear, viewMonth).map((d) => {
+              // Per-cell flags: dim days outside the browsed month, highlight
+              // the selected day, ring today, and disable anything before minDate.
               const iso = toISODate(d);
               const inMonth = d.getMonth() === viewMonth;
               const selected = iso === value;
               const isToday = iso === todayISO();
+              const disabled = !!minDate && iso < minDate;
               return (
                 <button
                   key={iso}
                   type="button"
+                  disabled={disabled}
                   onClick={() => { onChange(iso); setOpen(false); }}
-                  className={`h-8 rounded-md text-center text-[11px] flex items-center justify-center cursor-pointer transition-colors ${
+                  className={`h-8 rounded-md text-center text-[11px] flex items-center justify-center transition-colors ${
+                    disabled
+                      ? 'text-muted-foreground/30 cursor-not-allowed'
+                      : 'cursor-pointer'
+                  } ${
                     selected
                       ? 'bg-primary text-primary-foreground font-semibold'
                       : inMonth

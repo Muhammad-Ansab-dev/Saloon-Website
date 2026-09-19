@@ -39,13 +39,21 @@ export const BookingForm: React.FC<BookingFormProps> = ({
   // Live branches from the store; static LOCATIONS until the fetch resolves.
   const branchList = branches.length > 0 ? branches : staticBranches();
 
+  // Which stage the form is in: filling in details → request in flight →
+  // success summary. `submitError` holds the message shown under the form
+  // if the submission fails.
   const [step, setStep] = useState<'form' | 'submitting' | 'success'>('form');
   const [submitError, setSubmitError] = useState('');
 
+  // The visitor's choices so far. When the booking flow opens with a
+  // pre-selected service, date or time those are used as starting values;
+  // otherwise we default to the first service and first stylist.
   const [selectedServiceId, setSelectedServiceId] = useState<string>(
     preSelectedService?.id || services[0]?.id || ''
   );
   const [selectedStylistId, setSelectedStylistId] = useState<string>(stylists[0]?.id || '');
+  // The chosen day and time, plus the guest's contact details. `phone` and
+  // `notes` are optional; name and email are required before submitting.
   const [bookingDate, setBookingDate] = useState<string>(preSelectedDate || todayISO());
   const [bookingTime, setBookingTime] = useState<string>(preSelectedTime || '');
   const [name, setName] = useState('');
@@ -57,6 +65,7 @@ export const BookingForm: React.FC<BookingFormProps> = ({
   const [takenSlots, setTakenSlots] = useState<Set<string>>(new Set());
   const [availLoading, setAvailLoading] = useState(false);
 
+  // Which salon/branch the appointment is for; defaults to the first branch.
   const [selectedBranch, setSelectedBranch] = useState<string>(
     branchList[0]?.slug ?? ''
   );
@@ -66,16 +75,20 @@ export const BookingForm: React.FC<BookingFormProps> = ({
     () => stylists.filter((s) => stylistBranch(s) === selectedBranch),
     [stylists, selectedBranch]
   );
+  // If the branch has no team assigned yet, fall back to every stylist.
   const stylistOptions = branchStylists.length > 0 ? branchStylists : stylists;
 
+  // Resolve the selected IDs to their full records (for names, prices and the
+  // summary panel); if nothing is chosen yet, use the first matching entry.
   const currentService = services.find((service) => service.id === selectedServiceId) || services[0];
   const currentStylist = stylists.find((stylist) => stylist.id === selectedStylistId) || stylistOptions[0];
 
-  // Slots for the selected weekday, minus already-taken times.
+  // The weekday of the chosen date decides which time slots exist at all.
   const allSlots = useMemo(
     () => generateTimeSlots(new Date(bookingDate + 'T12:00:00').getDay()),
     [bookingDate]
   );
+  // The bookable times: every slot for that weekday minus the already-taken ones.
   const availableSlots = useMemo(
     () => allSlots.filter((slot) => !takenSlots.has(slot)),
     [allSlots, takenSlots]
@@ -123,8 +136,12 @@ export const BookingForm: React.FC<BookingFormProps> = ({
     }
   }, [takenSlots, availableSlots, bookingTime]);
 
+  // POST the booking to /api/booking. A failure (including a 409 "clash" when
+  // the slot was taken by someone else meanwhile) returns to the form with the
+  // server's message; success shows the summary panel and fires `onSuccess`.
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    // Bail without sending unless all the essential fields are filled in.
     if (!name || !email || !bookingTime) return;
 
     setSubmitError('');

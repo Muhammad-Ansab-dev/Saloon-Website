@@ -1,13 +1,16 @@
 // ─────────────────────────────────────────────────────────────
-// Route: /dashboard/branch/[id] — per-branch admin console. Resolves
-// the slug against the store's branch rows first (so branches created
-// in the Branches tab get a console), falling back to the static
-// LOCATIONS entries (e.g. zurich, paris), and mounts
-// BranchDashboardShell, which provides the branch's own Overview /
-// Bookings / Stylists tabs (reusing the global dashboard panels).
-// Protected by middleware (matcher covers /dashboard/:path*); the
-// header/footer chrome is suppressed by Providers for any /dashboard
-// prefix. Unknown slugs render an inline not-found state.
+// BRANCH CONSOLE ROUTE ("/dashboard/branch/[id]") — each branch
+// manager's own admin console.
+// What it does: resolves the URL slug to a branch, then mounts the shared
+// BranchDashboardShell for that branch (Overview / Bookings / Stylists tabs
+// scoped to this one branch).
+// What it connects to: the store's branches collection (DB rows are the
+// source of truth for which consoles exist), the static LOCATIONS fallback
+// (src/data/salonData.ts), and <BranchDashboardShell>
+// (src/components/dashboard/BranchDashboardShell.tsx).
+// Why it exists: middleware already bounces branch managers to this console;
+// this page just finds the right branch and renders it. Unknown slugs
+// render an inline "Branch not found" state.
 // ─────────────────────────────────────────────────────────────
 import Link from 'next/link';
 import { ArrowLeft } from 'lucide-react';
@@ -15,18 +18,22 @@ import { LOCATIONS } from '@/data/salonData';
 import { getCollection } from '@/lib/store';
 import { BranchDashboardShell } from '@/components/dashboard/BranchDashboardShell';
 
+// Server component for a branch console.
+// Params: { id } — the branch slug from the URL (awaited; may be e.g. "zurich").
+// Returns: <BranchDashboardShell> for a known branch, or an inline
+// not-found page for an unknown slug.
 export default async function BranchDetailPage({
   params,
 }: {
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
+  // Compare case-insensitively, since slugs come from the URL
   const slug = id.toLowerCase();
 
-  // DB rows are the source of truth for branch consoles (a branch created
-  // in the Branches tab must get one). Store errors fall through to the
-  // static LOCATIONS fallback so the original consoles keep working when
-  // the DB is unreachable.
+  // Resolve the branch: DB rows first (a branch added in the Branches tab
+  // must get a console). Store errors fall through to the static LOCATIONS
+  // fallback so the original consoles keep working when the DB is down.
   let dbBranch: { slug: string; city: string } | null = null;
   try {
     const rows = (await getCollection('branches')) as unknown as { slug: string; city: string }[];
@@ -35,8 +42,10 @@ export default async function BranchDetailPage({
     dbBranch = null;
   }
 
+  // Prefer the DB row; otherwise the matching static LOCATIONS entry
   const branch = dbBranch ?? LOCATIONS.find((loc) => loc.city.toLowerCase() === slug);
 
+  // Unknown slug → show a friendly not-found page with a link back
   if (!branch) {
     return (
       <div className="dark h-screen overflow-y-auto bg-background text-foreground">

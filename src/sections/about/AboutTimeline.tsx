@@ -25,14 +25,17 @@ interface Milestone {
 /* Timeline item — scrubbed by scroll: opacity, x/y travel, and dot pop all track scroll position. */
 const MilestoneItem: React.FC<{ milestone: Milestone; index: number }> = ({ milestone, index }) => {
   const itemRef = useRef<HTMLDivElement>(null);
+  // 0→1 as the milestone travels up through the lower third of the viewport.
   const { scrollYProgress } = useScroll({
     target: itemRef,
     offset: ['start 0.9', 'start 0.45'],
   });
 
+  // Fade in, rise up, and slide in from the side opposite the current column.
   const opacity = useTransform(scrollYProgress, [0, 1], [0, 1]);
   const y = useTransform(scrollYProgress, [0, 1], [56, 0]);
   const x = useTransform(scrollYProgress, [0, 1], [index % 2 === 0 ? -70 : 70, 0]);
+  // The dot grows from a point and glows as it becomes "current".
   const dotScale = useTransform(scrollYProgress, [0, 1], [0.2, 1]);
   const dotGlow = useTransform(scrollYProgress, [0, 1], [0, 1]);
 
@@ -77,6 +80,7 @@ const MilestoneItem: React.FC<{ milestone: Milestone; index: number }> = ({ mile
 export const AboutTimeline: React.FC = () => {
   const milestonesRef = useRef<HTMLDivElement>(null);
 
+  // Whole-section scroll progress drives how much of the vertical line is filled.
   const { scrollYProgress: milestoneProgress } = useScroll({
     target: milestonesRef,
     offset: ['start center', 'end center'],

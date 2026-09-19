@@ -1,11 +1,14 @@
 'use client';
+// ─────────────────────────────────────────────────────────────
 // Hero — homepage hero: one fullscreen background image that changes
-// based on which overlay box is hovered. Four boxes in a row, each with a
-// small accent line and a larger heading at the bottom-left.
-// Slide copy (accent / title / description) is editable by the admin from
-// the Content dashboard tab (site_texts) with the static HERO_SLIDES as
-// fallback; images come from the Media tab's hero image slots.
-// Rendered by HomePage.
+// based on which overlay box is hovered. Four boxes in a row, each
+// with a small accent line and a larger heading at the bottom-left.
+// Slide copy (accent / title / description) is editable by the admin
+// from the Content dashboard tab (site_texts) with the static
+// HERO_SLIDES as fallback; images come from the Media tab's hero
+// image slots (or the static defaults). Its styles live in
+// src/experience/heroSlider.css. Rendered by HomePage.
+// ─────────────────────────────────────────────────────────────
 
 import React from 'react';
 import '../../experience/heroSlider.css';
@@ -14,6 +17,7 @@ import { HERO_SLIDES, SITE_TEXT_DEFAULTS } from '@/data/salonData';
 
 export const Hero: React.FC = () => {
   const { images, texts } = useSiteContent();
+  // Which of the four boxes is currently hovered — drives the visible background.
   const [activeIndex, setActiveIndex] = React.useState(0);
 
   return (
@@ -30,6 +34,7 @@ export const Hero: React.FC = () => {
       </div>
       <div className="vfx-boxes">
         {HERO_SLIDES.map((box, index) => {
+          // Admin-edited text wins over the defaults; the static slide is the last resort.
           const n = index + 1;
           const accent = texts[`hero.${n}.accent`] ?? SITE_TEXT_DEFAULTS[`hero.${n}.accent`] ?? box.accent;
           const title = texts[`hero.${n}.title`] ?? SITE_TEXT_DEFAULTS[`hero.${n}.title`] ?? box.title;
@@ -39,6 +44,7 @@ export const Hero: React.FC = () => {
             <div
               key={`hero-box-${n}`}
               className="vfx-box"
+              // Hovering a box swaps which background gets the `.active` class above.
               onMouseEnter={() => setActiveIndex(index)}
             >
               <div className="vfx-box-outer">

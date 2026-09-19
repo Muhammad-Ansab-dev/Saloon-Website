@@ -10,6 +10,7 @@ import { ScrollReveal, Parallax } from '../../components/ui/ScrollReveal';
 import { useSiteContent } from '@/hooks/useSiteContent';
 
 export const About: React.FC = () => {
+  // The "about" image is admin-editable via the Media tab; falls back to a Cloudinary default.
   const { images } = useSiteContent();
   return (
     <section id="about" className="relative bg-white py-20 sm:py-28 overflow-hidden">
@@ -85,6 +86,7 @@ export const About: React.FC = () => {
                   As Seen In
                 </span>
                 <div className="flex flex-wrap items-center justify-start gap-6 sm:gap-10">
+                  {/* Each press publication is a text badge that appears in sequence */}
                   {['VOGUE', 'ELLE', 'BAZAAR', 'W', 'GQ'].map((pub, i) => (
                     <ScrollReveal
                       key={pub}

@@ -36,20 +36,28 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
   onRemoveItem,
   onClearCart,
 }) => {
+  // Whether the (mock) checkout is currently processing, and whether the order
+  // has been "placed" — together they drive the spinner state and the
+  // ORDER CONFIRMED screen before the drawer auto-closes.
   const [isCheckingOut, setIsCheckingOut] = useState(false);
   const [orderCompleted, setOrderCompleted] = useState(false);
+  // Checkout timers, kept in a ref so they can be cleared if the drawer unmounts early.
   const timers = useRef<ReturnType<typeof setTimeout>[]>([]);
 
+  // Clear any pending checkout timers when the drawer unmounts.
   useEffect(() => {
     const pending = timers.current;
     return () => pending.forEach(clearTimeout);
   }, []);
 
+  // Running total of price × quantity across every item in the bag.
   const subtotal = cartItems.reduce(
     (sum, item) => sum + item.product.price * item.quantity,
     0
   );
 
+  // Simulate a 1.2 s processing delay, then show the confirmation screen for
+  // 3 s, clear the cart, and close the drawer. Guarded so it can't re-fire.
   const handleCheckout = () => {
     if (isCheckingOut || orderCompleted) return;
     setIsCheckingOut(true);

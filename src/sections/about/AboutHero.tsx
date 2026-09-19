@@ -9,12 +9,15 @@ import React, { useRef } from 'react';
 import { motion, useScroll, useTransform } from 'motion/react';
 
 export const AboutHero: React.FC = () => {
+  // Ref to this hero so the parallax scroll math can measure it.
   const heroRef = useRef<HTMLDivElement>(null);
 
+  // 0→1 scroll progress as the hero leaves the viewport.
   const { scrollYProgress } = useScroll({
     target: heroRef,
     offset: ['start start', 'end start'],
   });
+  // Map that progress to bg drift downward, slight zoom, and a fade-out.
   const heroBgY = useTransform(scrollYProgress, [0, 1], ['0%', '35%']);
   const heroBgScale = useTransform(scrollYProgress, [0, 1], [1, 1.2]);
   const heroFade = useTransform(scrollYProgress, [0, 1], [1, 0.2]);

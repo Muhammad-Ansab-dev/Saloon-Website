@@ -24,9 +24,11 @@ const CLIENT_IMAGES = [
   'https://res.cloudinary.com/dittrfbja/image/upload/v1789650820/hair-salon/hair-hero3.webp',
 ];
 
+// One testimonial card: photo on the left (desktop) and quote/author on the right.
 const TestimonialCard: React.FC<{ index: number }> = ({ index }) => {
   const { images } = useSiteContent();
   const testimonial = TESTIMONIALS[index];
+  // Admin-edited client photos win; otherwise rotate through the preset image list.
   const image =
     images[`testimonial.${(index % CLIENT_IMAGES.length) + 1}`] ?? CLIENT_IMAGES[index % CLIENT_IMAGES.length];
   return (
@@ -72,15 +74,20 @@ const TestimonialCard: React.FC<{ index: number }> = ({ index }) => {
 };
 
 export const TestimonialGrid: React.FC = () => {
+  // Index of the centered (active) card.
   const [active, setActive] = useState(0);
   const count = TESTIMONIALS.length;
 
+  // How far a card sits from the active one, using the short way around the
+  // circular list (so -1/+1 are the two visible neighbours, not 8/9).
   const positionOf = (index: number): number => {
     let distance = (index - active + count) % count;
     if (distance > count / 2) distance -= count;
     return distance;
   };
 
+  // Turn that distance into the 3D coverflow transform: front card full size,
+  // neighbours angled and inset on either side, the rest hidden behind.
   const transformFor = (distance: number) => {
     if (distance === 0) return { x: '0%', rotateY: 0, scale: 1, opacity: 1, zIndex: 30 };
     if (distance === 1) return { x: '52%', rotateY: -34, scale: 0.82, opacity: 0.6, zIndex: 20 };
@@ -88,6 +95,7 @@ export const TestimonialGrid: React.FC = () => {
     return { x: '0%', rotateY: 0, scale: 0.7, opacity: 0, zIndex: 0 };
   };
 
+  // Cycle forward/backward through the testimonials (wrapping at the ends).
   const prev = () => setActive((value) => (value - 1 + count) % count);
   const next = () => setActive((value) => (value + 1) % count);
 
@@ -105,6 +113,7 @@ export const TestimonialGrid: React.FC = () => {
             return (
               <motion.div
                 key={index}
+                // Spring-animate the coverflow placement whenever `active` changes.
                 animate={{
                   x: transform.x,
                   rotateY: transform.rotateY,
@@ -113,6 +122,7 @@ export const TestimonialGrid: React.FC = () => {
                   zIndex: transform.zIndex,
                 }}
                 transition={{ type: 'spring', stiffness: 260, damping: 30 }}
+                // Clicking a neighbour pulls it to centre.
                 onClick={() => {
                   if (distance === 1) next();
                   else if (distance === -1) prev();

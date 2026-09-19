@@ -17,15 +17,20 @@ interface ServiceMenuProps {
 }
 
 export const ServiceMenu: React.FC<ServiceMenuProps> = ({ onSelectService }) => {
+  // Services come from the live store (admin-editable) with static defaults as fallback.
   const { services } = useSiteContent();
+  // "All" plus one pill per unique service category.
   const CATEGORY_OPTIONS = useMemo(
     () => ['All', ...Array.from(new Set(services.map((service) => service.category)))],
     [services]
   );
+  // Which filter pill is active, and the currently highlighted service row.
   const [activeCategory, setActiveCategory] = useState<string>('All');
   const [activeServiceId, setActiveServiceId] = useState<string>(services[0]?.id ?? '');
+  // The list element is measured so a fixed 4-row viewport can keep the pills stationary.
   const listRef = useRef<HTMLDivElement>(null);
 
+  // Only the services matching the active pill.
   const visibleServices = useMemo(
     () =>
       activeCategory === 'All'
@@ -34,6 +39,7 @@ export const ServiceMenu: React.FC<ServiceMenuProps> = ({ onSelectService }) => 
     [activeCategory, services]
   );
 
+  // If the highlighted service no longer exists in the filtered list, fall back to the first one.
   useEffect(() => {
     if (!visibleServices.some((service) => service.id === activeServiceId)) {
       setActiveServiceId(visibleServices[0]?.id ?? services[0]?.id ?? '');
@@ -59,8 +65,11 @@ export const ServiceMenu: React.FC<ServiceMenuProps> = ({ onSelectService }) => 
     return () => window.removeEventListener('resize', measure);
   }, []);
 
+  // The service shown in the right-hand image preview (the hovered one, else the first).
   const activeService = visibleServices.find((service) => service.id === activeServiceId) ?? visibleServices[0];
+  // Extra styling metadata (alt text, alternate image) for that service.
   const activeMedia = activeService ? SERVICE_MEDIA[activeService.id] : undefined;
+  // Service image: prefer the service's own, then its media entry.
   const svcImage = activeService?.image || activeMedia?.image;
 
   return (
@@ -107,7 +116,8 @@ export const ServiceMenu: React.FC<ServiceMenuProps> = ({ onSelectService }) => 
               </Link>
             </div>
 
-            {/* Price List Items — filtered in real time by active pill */}
+            {/* Price List Items — filtered in real time by active pill; hovering a row
+                or clicking it passes that service into the booking modal */}
             <div ref={listRef} className="svcm-list space-y-6 sm:space-y-7">
               {visibleServices.map((service, idx) => (
                 <SpringReveal
@@ -140,7 +150,8 @@ export const ServiceMenu: React.FC<ServiceMenuProps> = ({ onSelectService }) => 
             </div>
           </div>
 
-          {/* Right Column: Image — slides in from right with rotation + spring */}
+          {/* Right Column: Image — slides in from right with rotation + spring;
+              swaps crossfade-style whenever the hovered service changes */}
           <div className="lg:col-span-6">
             <SpringReveal
               direction="right"

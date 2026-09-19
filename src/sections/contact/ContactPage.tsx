@@ -33,17 +33,20 @@ export const ContactPage: React.FC = () => {
   // Live branches from the store; falls back to the static LOCATIONS until the
   // fetch resolves (and if the admin ever deletes every branch).
   const branchList = branches.length > 0 ? branches : staticBranches();
+  // The message form's live values, and whether it shows the success state.
   const [form, setForm] = useState({ name: '', email: '', subject: '', message: '' });
   const [submitted, setSubmitted] = useState(false);
   // Remounts BookingForm after a completed booking so a new one can be made.
   const [bookingKey, setBookingKey] = useState(0);
 
+  // Writes keystrokes into the matching form field by its `name` attribute.
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
   ) => {
     setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
   };
 
+  // Message form submit: swap the form for the "Message sent" confirmation.
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setSubmitted(true);

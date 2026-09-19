@@ -7,9 +7,13 @@
 // and the image CMS seed/fallback maps (SERVICE_IMAGE_BY_ID,
 // STYLIST_IMAGE_BY_ID, SITE_IMAGES_DEFAULTS). Consumed by
 // virtually every component/page.
+// In plain words: every word and picture on the site starts its life here.
+// When the admin edits something in the dashboard, they only override a copy
+// of this stored in the database — this file stays as the always-safe original.
 // ─────────────────────────────────────────────────────────────
 import { Product, ServiceItem, Testimonial, LocationBranch } from '../types';
 
+// Products sold in the shop (the cart). Each field maps to the Product type.
 export const PRODUCTS: Product[] = [
   {
     id: 'sos-conditioner',
@@ -77,6 +81,7 @@ export const PRODUCTS: Product[] = [
   }
 ];
 
+// Customer quotes for the homepage testimonial carousel (TestimonialGrid).
 export const TESTIMONIALS: Testimonial[] = [
   {
     id: 'test-2',
@@ -143,6 +148,8 @@ export const TESTIMONIALS: Testimonial[] = [
   }
 ];
 
+// The studio branches (Zurich, Paris). These seed the branches table and drive
+// the visit-us section; the slug is the branch's lowercase city.
 export const LOCATIONS: LocationBranch[] = [
   {
     city: 'ZURICH',
@@ -160,6 +167,8 @@ export const LOCATIONS: LocationBranch[] = [
   }
 ];
 
+// The services menu — everything the studio offers, with price + duration +
+// category. Seeds the services table and drives the /services pages.
 export const SERVICES: ServiceItem[] = [
   {
     id: 'srv-1',
@@ -259,6 +268,8 @@ export const SERVICES: ServiceItem[] = [
   }
 ];
 
+// Media (hero image + alt text) for each service, keyed by service id. Shown
+// on the service detail pages and category cards.
 export const SERVICE_MEDIA: Record<string, { image: string; alt: string }> = {
   'srv-1': {
     image: 'https://res.cloudinary.com/dittrfbja/image/upload/v1789650822/hair-salon/hero-1.webp',
@@ -310,6 +321,9 @@ export const SERVICE_MEDIA: Record<string, { image: string; alt: string }> = {
   }
 };
 
+// The team roster used for booking (stylist dropdown), the about page, and
+// the homepage team section. Seeds the stylists table. Each entry carries a
+// `branch` slug so managers only book with their own studio's stylists.
 export const STYLISTS = [
   { id: 'paul', name: 'Paul Delacroix', role: 'Creative Director & Master Stylist', branch: 'zurich' },
   { id: 'claire', name: 'Claire Moreau', role: 'Senior Colorist & Balayage Specialist', branch: 'zurich' },
@@ -327,7 +341,9 @@ export const BRANCH_BY_STYLIST_ID: Record<string, string> = Object.fromEntries(
   STYLISTS.map((s) => [s.id, s.branch])
 );
 
-/** Resolve a stylist's branch slug, preferring a stored branch and falling back to the static map. */
+/** Resolve a stylist's branch slug, preferring a stored `branch` and falling
+ * back to the static map. Params: stylist — the stylist object (may carry its
+ * own branch). Returns the lowercase branch slug, or '' when unknown. */
 export function stylistBranch(stylist: { id?: string; branch?: string }): string {
   const key = stylist.id ?? '';
   return (stylist.branch || BRANCH_BY_STYLIST_ID[key] || '').toLowerCase();
@@ -342,6 +358,8 @@ export const SERVICE_IMAGE_BY_ID: Record<string, string> = Object.fromEntries(
   Object.entries(SERVICE_MEDIA).map(([id, m]) => [id, m.image])
 ) as Record<string, string>;
 
+// Default portrait per stylist, keyed by stylist id (used until an admin
+// replaces one via the Media tab).
 export const STYLIST_IMAGE_BY_ID: Record<string, string> = {
   paul: 'https://res.cloudinary.com/dittrfbja/image/upload/v1789651072/hair-salon/hair-hero1.webp',
   claire: 'https://res.cloudinary.com/dittrfbja/image/upload/v1789651073/hair-salon/hair-hero2.webp',
@@ -353,6 +371,9 @@ export const STYLIST_IMAGE_BY_ID: Record<string, string> = {
   nina: 'https://res.cloudinary.com/dittrfbja/image/upload/v1789650830/hair-salon/lookbook-1.webp',
 };
 
+// Default images for the site's named image slots (hero slides, category
+// cards, testimonials, branch pages). Admins can swap any of these from the
+// Media tab; the live value then lives in the site_images table.
 export const SITE_IMAGES_DEFAULTS: Record<string, string> = {
   'hero.1': 'https://res.cloudinary.com/dittrfbja/image/upload/v1789650822/hair-salon/hero-1.webp',
   'hero.2': 'https://res.cloudinary.com/dittrfbja/image/upload/v1789651073/hair-salon/hair-hero2.webp',
@@ -379,11 +400,11 @@ export const SITE_IMAGES_DEFAULTS: Record<string, string> = {
   'branch.paris': 'https://res.cloudinary.com/dittrfbja/image/upload/v1789650836/hair-salon/servicemenu.webp',
 };
 
-/** Hero slides — single source of truth for the homepage hero copy.
- * Images are overridable per slide via the `hero.N` image slots (Media
- * tab); text is overridable via the Content tab (site_texts collection,
- * keys `hero.N.accent|title|description`). Editors change the defaults
- * here, admins change the live copy from the dashboard. */
+// Hero slides — single source of truth for the homepage hero copy.
+// Images are overridable per slide via the `hero.N` image slots (Media
+// tab); text is overridable via the Content tab (site_texts collection,
+// keys `hero.N.accent|title|description`). Editors change the defaults
+// here, admins change the live copy from the dashboard.
 export interface HeroSlide {
   accent: string;
   title: string;
@@ -391,6 +412,8 @@ export interface HeroSlide {
   image: string;
 }
 
+// The four homepage hero slides, in order. Each slide's image is pulled from
+// the SITE_IMAGES_DEFAULTS slots defined above.
 export const HERO_SLIDES: HeroSlide[] = [
   {
     accent: 'Warm & Cozy',
@@ -422,11 +445,13 @@ export const HERO_SLIDES: HeroSlide[] = [
   },
 ];
 
-/** Editable, admin-driven text slots for the hero — keyed per slide. The
- * Content dashboard tab writes these to the site_texts collection; the
- * hero (and the default seed) read from this map on first boot. */
+// Default admin-editable text slots for the hero, keyed per slide
+// (hero.<n>.accent / .title / .description). The Content dashboard tab writes
+// these to the site_texts collection; the hero reads from it on first boot.
 export const SITE_TEXT_DEFAULTS: Record<string, string> = (() => {
   const out: Record<string, string> = {};
+  // Flatten the hero slides into one "key → text" map so every line of hero
+  // copy is addressable (and editable) by a single key.
   HERO_SLIDES.forEach((slide, i) => {
     const n = i + 1;
     out[`hero.${n}.accent`] = slide.accent;

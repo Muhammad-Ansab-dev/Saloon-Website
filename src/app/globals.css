@@ -1,18 +1,32 @@
 /* ─────────────────────────────────────────────
-   Globals — Tailwind v4 import, brand color tokens
-   (blush family), base typography + selection colors,
-   editorial/serif font utilities, custom scrollbar,
-   marquee keyframes (used by About stats + testimonials)
-   and watermark script text.
+   ROOT SECTION — this file is the website's single stylesheet.
+
+   It defines the DESIGN TOKENS (the "variables" used everywhere):
+   - --color-blush* — the brand pink family. --color-blush (#fce8ee) is the
+     main company pink; the others are lighter/deeper shades of the same
+     family (subtle/light/deep). Used for accents and soft backgrounds.
+   - --color-black-pure / --color-charcoal — the near-black neutrals.
+   - Font tokens: .font-editorial (Syne, bold uppercase — headings),
+     .font-script (Caveat — handwritten accents), .font-serif-luxury
+     (Playfair Display — luxury serif). Tailwind classes like
+     `font-editorial` or `bg-blush` map to these.
+   - A shadcn/ui theme block (@theme inline + :root/.dark) with standard
+     tokens (background, foreground, sidebar, chart colors, radii).
+
+   Below it: base body typography, selection color, the custom scrollbar,
+   marquee keyframes (the scrolling text strips) and the watermark script.
    ───────────────────────────────────────────── */
 @import "tailwindcss";
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
 
+/* Allows a `.dark` class on any element to switch that subtree to dark colors */
 @custom-variant dark (&:is(.dark *));
 
 @layer base {
+  /* Base layer — default styles applied to every element before page CSS */
   :root {
+    /* Brand pink token family — the studio's signature color range */
     --color-blush: #fce8ee;
     --color-blush-subtle: #fae1e8;
     --color-blush-light: #fef4f7;
@@ -21,6 +35,9 @@
     --color-charcoal: #111111;
   }
 
+  /* Body defaults: main font family, text color, subtle letter-spacing,
+     and anti-aliasing so fonts render crisply on all screens.
+     overflow-x hidden stops horizontal scroll from decorative elements. */
   body {
     font-family: 'Montserrat', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
     color: #111111;
@@ -32,6 +49,7 @@
     @apply bg-background text-foreground;
   }
 
+  /* Text selection highlight: dark background, white text */
   ::selection {
     background-color: #111111;
     color: #ffffff;
@@ -44,16 +62,20 @@
   }
 }
 
+/* ─── Typography utilities (used as Tailwind classes) ─── */
+/* font-editorial — Syne, the bold editorial headline font (uppercase headings) */
 .font-editorial {
   font-family: 'Syne', 'Montserrat', sans-serif;
   letter-spacing: -0.03em;
 }
 
+/* font-script — Caveat, the handwritten-style accent font */
 .font-script {
   font-family: 'Caveat', 'Playfair Display', cursive, sans-serif;
   font-weight: 700;
 }
 
+/* font-serif-luxury — Playfair Display, the luxury serif for elegant copy */
 .font-serif-luxury {
   font-family: 'Playfair Display', serif;
 }
@@ -95,7 +117,9 @@ html:has(.dark) {
   scrollbar-color: #7a7a7a #161616;
 }
 
-/* Marquee text animations */
+/* ─── Marquee animation (scrolling text strips, e.g. About stats + testimonials) ───
+   The strip animates left by 50% (half its own width) so the repeating copy
+   loops seamlessly forever. */
 @keyframes marquee {
   0% { transform: translate3d(0, 0, 0); }
   100% { transform: translate3d(-50%, 0, 0); }
@@ -117,12 +141,15 @@ html:has(.dark) {
   animation-duration: 30s;
 }
 
+/* Hovering the strip (or its container) pauses the loop — nice for reading */
 .group-marquee:hover .animate-marquee,
 .animate-marquee:hover {
   animation-play-state: paused !important;
 }
 
-/* Watermark script text styling */
+/* ─── Watermark background text (large faint script behind a section) ───
+   Faint, non-selectable, non-interactive, so it reads as a design accent
+   rather than copy. */
 .watermark-script {
   font-family: 'Caveat', cursive;
   user-select: none;
@@ -131,6 +158,9 @@ html:has(.dark) {
   line-height: 0.8;
 }
 
+/* ─── shadcn/ui theme wiring (Tailwind v4 @theme inline) ───
+   Maps the standard shadcn tokens (sidebar, chart, primary, radius, …) into
+   Tailwind utility classes so existing shadcn components keep their colors. */
 @theme inline {
   --font-heading: var(--font-sans);
   --font-sans: var(--font-sans);

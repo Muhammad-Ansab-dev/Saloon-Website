@@ -4,6 +4,10 @@
 // collection lives in its own table and all reads go through the
 // pool, so every route handler sees the latest committed writes
 // (no module cache, no temp-file races).
+// In plain words: this is the site's filing cabinet. The admin dashboard
+// saves its content here (menu, team, gallery, images, bookings, branches)
+// and the public site reads from here too. On first use it creates its own
+// database tables and fills them with the starter content.
 //
 // Tables:
 //   services(id, name, description, price, duration_minutes,
@@ -40,10 +44,16 @@ import {
   LOCATIONS,
 } from '../data/salonData';
 import { branchAccount } from './auth';
+import { todayISO } from './bookingTime';
 import { GALLERY_ITEMS } from '../data/galleryData';
 
+// Life cycle of a booking: 'pending' (just booked) → 'confirmed' by an admin →
+// 'completed' when the appointment is done; overdue pending/confirmed bookings
+// automatically become 'cancelled' (see cancelOverdueBookings below).
 export type BookingStatus = 'pending' | 'confirmed' | 'completed' | 'cancelled';
 
+// A single appointment as stored/returned by the store, and the shape every
+// booking screen (public form, admin tabs) works with.
 export interface Booking {
   id: string;
   serviceId?: string;
@@ -60,6 +70,9 @@ export interface Booking {
   status?: BookingStatus;
 }
 
+// Row shapes — each maps one-to-one to a database table, and the mapper
+// functions further down convert snake_case DB columns into these camelCase JS
+// objects the rest of the app consumes.
 export type ServiceRow = {
   id: string;
   name: string;
@@ -79,6 +92,8 @@ export type GalleryRow = {
 export type SiteImageRow = { key: string; value: string };
 export type SiteTextRow = { key: string; value: string };
 export type CategoryRow = { name: string; stylists: string[] };
+// A branch row includes its manager's login credentials — which is why branch
+// data is only ever exposed through the admin APIs, never on the public site.
 export type BranchRow = {
   slug: string;
   city: string;
@@ -91,6 +106,7 @@ export type BranchRow = {
   createdAt: string;
 };
 
+// Every collection the store owns, keyed by the admin tab that edits it.
 export type ContentCollections = {
   services: ServiceRow[];
   stylists: StylistRow[];
@@ -102,6 +118,8 @@ export type ContentCollections = {
   branches: BranchRow[];
 };
 
+// The starter content everything gets seeded from: the static arrays above,
+// plus derived maps (image entries, category names, branch rows from LOCATIONS).
 const DEFAULTS = {
   services: SERVICES,
   stylists: STYLISTS,
@@ -109,6 +127,8 @@ const DEFAULTS = {
   bookings: [],
   siteImages: Object.entries(SITE_IMAGES_DEFAULTS).map(([key, value]) => ({ key, value })),
   siteTexts: Object.entries(SITE_TEXT_DEFAULTS).map(([key, value]) => ({ key, value })),
+  // Categories are derived from the service menu's unique categories, each
+  // starting out with no assigned stylists.
   categories: [...new Set(SERVICES.map((s) => s.category).filter(Boolean))].map((name) => ({ name, stylists: [] })),
   branches: LOCATIONS.map((loc) => {
     const slug = loc.city.toLowerCase();
@@ -136,6 +156,7 @@ type GlobalWithPool = typeof globalThis & {
 
 function getPool(): Pool {
   const g = globalThis as GlobalWithPool;
+  // Create the pool once (keyed on globalThis) and reuse it forever after.
   if (!g[POOL_KEY]) {
     const connectionString =
       process.env.DATABASE_URL ??
@@ -150,6 +171,8 @@ function getPool(): Pool {
   return g[POOL_KEY];
 }
 
+// Maps each collection key to the physical table that stores it, converting
+// getCollection/setCollection calls into the right SQL.
 const TABLE_BY_COLLECTION: Record<
   keyof ContentCollections,
   string
@@ -234,13 +257,17 @@ CREATE TABLE IF NOT EXISTS branches (
 
 let initPromise: Promise<void> | null = null;
 
-/** Create tables if missing and seed default content on first run.
- * Safe to call repeatedly and from every route bundle. */
+// Create the tables if missing and seed the starter content on first run.
+// Runs once per process (the initPromise guard) so concurrent route bundles
+// can't race each other, and is safe to call repeatedly. After a failure the
+// guard resets so a later request can retry.
 async function ensureSchema(): Promise<void> {
   if (!initPromise) {
     initPromise = (async () => {
       const pool = getPool();
       await pool.query(SCHEMA_SQL);
+      // Idempotent "migrations": add columns/defaults that newer code expects,
+      // even on tables created by an older version of the store. Safe to re-run.
       await pool.query(
         `ALTER TABLE bookings ADD COLUMN IF NOT EXISTS status TEXT NOT NULL DEFAULT 'pending'`
       );
@@ -345,6 +372,10 @@ async function ensureSchema(): Promise<void> {
   return initPromise;
 }
 
+// Insert the static starter content (services, stylists, gallery, branches)
+// into a brand-new database. Only called when the services table is empty, so
+// a fresh install is fully populated; the whole run happens in one transaction
+// so any failure rolls everything back and leaves the DB untouched.
 async function seedFromDefaults(): Promise<void> {
   const pool = getPool();
   const cx = await pool.connect();
@@ -392,6 +423,9 @@ async function seedFromDefaults(): Promise<void> {
   }
 }
 
+// Row mappers: each converts one snake_case database row into the camelCase
+// shape defined by the matching Row type above. Every optional-ish column falls
+// back to a sensible empty value so the UI never sees undefined.
 function mapService(row: Record<string, unknown>): ServiceRow {
   return {
     id: String(row.id),
@@ -457,6 +491,8 @@ function mapBranch(row: Record<string, unknown>): BranchRow {
 function mapCategory(row: Record<string, unknown>): CategoryRow {
   let stylists: string[] = [];
   const raw = String(row.stylists ?? '');
+  // The stylists column stores a JSON array; parse it defensively (bad JSON
+  // simply yields an empty list).
   try {
     const parsed = JSON.parse(raw);
     if (Array.isArray(parsed)) stylists = parsed.filter((x) => typeof x === 'string');
@@ -468,6 +504,8 @@ function mapCategory(row: Record<string, unknown>): CategoryRow {
 
 function mapBooking(row: Record<string, unknown>): Booking {
   const status = String(row.status ?? '');
+  // Normalise the status string; anything unexpected becomes the default
+  // 'pending' so older rows always carry a valid status.
   return {
     id: String(row.id),
     serviceId: row.service_id ? String(row.service_id) : undefined,
@@ -491,6 +529,9 @@ function mapBooking(row: Record<string, unknown>): Booking {
   };
 }
 
+// Read one collection from its table with a stable ordering. Keyed collections
+// have their own SELECT; the default path orders by sort_order then id.
+// Params: key — which collection to read. Returns the mapped rows in JS shape.
 async function queryCollection<K extends keyof ContentCollections>(
   key: K
 ): Promise<ContentCollections[K]> {
@@ -554,6 +595,10 @@ async function queryCollection<K extends keyof ContentCollections>(
 const Q_KEY = '__contentStoreWriteFlow';
 type GlobalWithFlow = typeof globalThis & { [Q_KEY]?: Promise<unknown> };
 
+// Queue `op` behind whatever write is currently running and return its result.
+// Each new operation is chained onto the last one, so writes complete strictly
+// in the order they arrive and never run at the same time. Params: op — a
+// function that performs one write. Returns op's promise/result.
 function withWriteLock<T>(op: () => Promise<T>): Promise<T> {
   const g = globalThis as GlobalWithFlow;
   const prev = g[Q_KEY] ?? Promise.resolve();
@@ -565,15 +610,17 @@ function withWriteLock<T>(op: () => Promise<T>): Promise<T> {
   return next;
 }
 
-/** Read one collection by key. */
+// Read one collection by key (e.g. 'services'). Params: key — the collection
+// to read. Returns the collection's rows in their JS shape.
 export async function getCollection<K extends keyof ContentCollections>(
   key: K
 ): Promise<ContentCollections[K]> {
   return queryCollection(key);
 }
 
-/** Replace one collection wholesale, in a transaction. Runs through the
- * serial write queue so concurrent saves cannot interleave. */
+// Replace one collection wholesale inside a transaction. Runs through the
+// serial write queue so concurrent saves cannot interleave. Params: key — the
+// collection to overwrite; value — its complete new contents.
 export async function setCollection<K extends keyof ContentCollections>(
   key: K,
   value: ContentCollections[K]
@@ -582,11 +629,11 @@ export async function setCollection<K extends keyof ContentCollections>(
   await withWriteLock(() => replaceCollection(key, value));
 }
 
-/** Update one booking field in place (targeted UPDATE, no full-table
- * rewrite). Returns the number of rows affected — 0 means "not found".
- * Runs through the serial write queue so it never interleaves with a
- * wholesale save. New bookings arrive as `pending` (see /api/booking);
- * admins confirm, complete, or cancel them here. */
+// Update one booking field in place (a targeted UPDATE, no full-table rewrite).
+// Returns the number of rows affected — 0 means "no booking with that id".
+// Runs through the serial write queue so it never interleaves with a wholesale
+// save. New bookings arrive as 'pending' (see /api/booking); admins confirm,
+// complete, or cancel them here.
 export async function updateBooking(
   id: string,
   patch: { status?: BookingStatus }
@@ -606,9 +653,29 @@ export async function updateBooking(
   return affected;
 }
 
-/** Core replace-one-collection logic (must be called while holding the lock —
- * assumes the caller, setCollection or updateContent, is inside withWriteLock).
- * Uses a transaction so a failure rolls the table back intact. */
+// Auto-cancel bookings whose date has already passed: pending/confirmed rows
+// with a date earlier than today become 'cancelled'. Called from GET
+// /api/admin/bookings so every dashboard load sweeps the table. Returns the
+// number of rows it cancelled.
+export async function cancelOverdueBookings(): Promise<number> {
+  await ensureSchema();
+  const pool = getPool();
+  const today = todayISO();
+  let affected = 0;
+  await withWriteLock(async () => {
+    const res = await pool.query(
+      `UPDATE bookings SET status = 'cancelled'
+        WHERE status IN ('pending','confirmed') AND date < $1`,
+      [today]
+    );
+    affected = res.rowCount ?? 0;
+  });
+  return affected;
+}
+
+// Core replace-one-collection logic (must be called while holding the lock —
+// the caller, setCollection or updateContent, is inside withWriteLock). Uses a
+// transaction so a failure rolls the table back to its previous state.
 async function replaceCollection<K extends keyof ContentCollections>(
   key: K,
   value: ContentCollections[K]
@@ -733,9 +800,9 @@ async function replaceCollection<K extends keyof ContentCollections>(
   }
 }
 
-/** Run a mutation as one serialised read-modify-write: `fn` is given the
- * current full content and returns the new content to persist. Because it
- * runs inside the write lock, concurrent callers cannot clobber each other. */
+// Run a mutation as one serialised read-modify-write: `fn` is handed the full
+// current content and returns the new content to persist. Because everything
+// runs inside the write lock, concurrent callers cannot clobber each other.
 export async function updateContent(
   fn: (current: ContentCollections) => ContentCollections
 ): Promise<void> {
@@ -766,7 +833,8 @@ export async function updateContent(
   });
 }
 
-/** Read the full content (used by updateContent; public API parity). */
+// Read all eight collections at once into a single ContentCollections object
+// (used by updateContent; also exposed as the public read-all API).
 export async function getContent(): Promise<ContentCollections> {
   const [services, stylists, gallery, bookings, siteImages, siteTexts, categories, branches] = await Promise.all([
     getCollection('services'),
@@ -781,11 +849,15 @@ export async function getContent(): Promise<ContentCollections> {
   return { services, stylists, gallery, bookings, siteImages, siteTexts, categories, branches };
 }
 
-/** Reset one collection back to its seed defaults. */
+// Reset one collection back to its seed defaults (a "restore original" action
+// in the admin panel). Params: key — the collection to restore.
 export async function resetCollection<K extends keyof ContentCollections>(
   key: K
 ): Promise<void> {
   await setCollection(key, (DEFAULTS[key] as unknown) as ContentCollections[K]);
 }
 
+// The canonical collection names, in the same order as ContentCollections.
+// Used by admin routes and the reset action to enumerate everything the store
+// manages.
 export const COLLECTION_KEYS = ['services', 'stylists', 'gallery', 'bookings', 'siteImages', 'siteTexts', 'categories', 'branches'] as const;

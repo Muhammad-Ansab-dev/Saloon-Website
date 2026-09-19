@@ -30,11 +30,14 @@ export const Header: React.FC<HeaderProps> = ({
   onOpenBooking,
   onNavigate,
 }) => {
+  // Tracks whether we've scrolled past 40px — flips the header from transparent to solid.
   const [isScrolled, setIsScrolled] = useState(false);
+  // Whether the mobile / full-screen menu drawer is open.
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const router = useRouter();
   const pathname = usePathname();
 
+  // Adds a scroll listener while the header is mounted and removes it afterwards.
   useEffect(() => {
     const handleScroll = () => {
       setIsScrolled(window.scrollY > 40);
@@ -43,6 +46,7 @@ export const Header: React.FC<HeaderProps> = ({
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
+  // The top navigation menu: each entry points at a section (home page) or a route (other pages).
   const navLinks = [
     { name: 'HOME', href: 'hero', path: '/' },
     { name: 'ABOUT', href: 'about', path: '/about' },
@@ -51,11 +55,15 @@ export const Header: React.FC<HeaderProps> = ({
     { name: 'CONTACT', href: 'contact', path: '/contact' },
   ];
 
+  // On the home page while not scrolled the header sits over the dark hero,
+  // so links turn white; elsewhere (or once scrolled) they become black.
   const isHomePage = pathname === '/';
   const isOverHero = isHomePage && !isScrolled;
   const linkColor = isOverHero ? 'text-white hover:text-neutral-300' : 'text-black hover:text-neutral-500';
   const underlineColor = isOverHero ? 'bg-white' : 'bg-black';
 
+  // Nav click logic: same-page links scroll to a section; cross-page links navigate
+  // to the route, and on non-home routes pass ?scrollTo=<id> so the target section auto-scrolls.
   const handleNavClick = (link: { name: string; href: string; path: string }) => {
     setIsMobileMenuOpen(false);
     if (link.path !== '/') {

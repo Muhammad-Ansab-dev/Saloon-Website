@@ -50,6 +50,7 @@ export const AboutValues: React.FC = () => {
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8">
           {VALUES.map((value, idx) => (
+            // Cards alternate entrance from left/right and lift + invert to black on hover.
             <SpringReveal
               key={value.title}
               direction={idx % 2 === 0 ? 'left' : 'right'}

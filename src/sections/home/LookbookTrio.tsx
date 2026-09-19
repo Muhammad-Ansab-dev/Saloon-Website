@@ -12,6 +12,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { ScrollReveal, SpringReveal } from '../../components/ui/ScrollReveal';
 import { VIDEO_POSTERS } from '../../data/galleryData';
 
+// Enter direction per column (left / up / right) so the trio fans in.
 const CARD_DIRS = ['left', 'up', 'right'] as const;
 
 interface ShortVideo {
@@ -22,8 +23,11 @@ interface ShortVideo {
   player: string;
 }
 
+// The three YouTube Shorts shown on the homepage lookbook.
 const SHORT_IDS = ['rr7ACX0M_0c', 'IUC_K7ZT0I0', 'RHr0md2bB74'];
 
+// Build the three cards from raw video IDs: auto-titled, poster from galleryData,
+// and a sound-enabled YouTube embed URL.
 const VIDEOS: ShortVideo[] = SHORT_IDS.map((id, i) => ({
   id,
   title: `EDITORIAL FILM 0${i + 1}`,
@@ -33,6 +37,7 @@ const VIDEOS: ShortVideo[] = SHORT_IDS.map((id, i) => ({
 }));
 
 export const LookbookTrio: React.FC = () => {
+  // The film open in the lightbox (null = lightbox hidden).
   const [selectedVideo, setSelectedVideo] = useState<ShortVideo | null>(null);
 
   return (
@@ -89,7 +94,7 @@ export const LookbookTrio: React.FC = () => {
         </div>
       </div>
 
-      {/* Video Lightbox */}
+      {/* Video Lightbox — clicking the backdrop or the X closes it */}
       <AnimatePresence>
         {selectedVideo && (
           <motion.div

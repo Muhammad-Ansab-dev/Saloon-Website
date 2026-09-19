@@ -37,7 +37,7 @@ type BookingRow = {
   createdAt: string;
 };
 
-type View = 'analytics' | 'list' | 'today';
+type View = 'analytics' | 'list' | 'today' | 'branch';
 type BookingPeriod = 'total' | 'daily' | 'weekly' | 'monthly' | 'yearly' | 'custom';
 const PERIOD_LABEL: Record<BookingPeriod, string> = {
   total: 'all time · aggregated',
@@ -51,7 +51,7 @@ const PERIOD_LABEL: Record<BookingPeriod, string> = {
 type ListFilter = 'all' | 'today' | 'daily' | 'weekly' | 'monthly' | 'yearly' | 'custom';
 type ListStatusFilter = 'all' | BookingRow['status'];
 const LIST_FILTER_OPTIONS: { value: ListFilter; label: string }[] = [
-  { value: 'all', label: 'All dates' },
+  { value: 'all', label: 'From today onward' },
   { value: 'today', label: 'Today' },
   { value: 'daily', label: 'Daily · last 30 days' },
   { value: 'weekly', label: 'Weekly · last 8 weeks' },
@@ -114,26 +114,36 @@ function fmt(n: number) { return n.toLocaleString('en-US'); }
 const PAGE_SIZE = 10;
 
 export function BookingTab({ branch }: { branch?: string }) {
+  // Raw bookings + branch list from the DB, plus load/refresh/error flags.
   const [bookings, setBookings] = useState<BookingRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState('');
+  // Which sub-view is active and, for analytics, the selected period.
   const [view, setView] = useState<View>('analytics');
   const [period, setPeriod] = useState<BookingPeriod>('total');
+  // List-view state: current page, free-text search, date preset, custom single
+  // date, status filter, and the booking currently waiting on delete confirm.
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState('');
   const [dateFilter, setDateFilter] = useState<ListFilter>('all');
   const [customDate, setCustomDate] = useState('');
   const [listStatus, setListStatus] = useState<ListStatusFilter>('all');
   const [deleteTarget, setDeleteTarget] = useState<BookingRow | null>(null);
-  const [addOpen, setAddOpen] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  // Add-booking modal flag, trend-line status filter, and the custom-range
+  // calendar pair (customWrapRef detects outside clicks).
+  const [addOpen, setAddOpen] = useState(false);
   const [trendStatus, setTrendStatus] = useState<'all' | BookingRow['status']>('all');
   const [customFrom, setCustomFrom] = useState('');
   const [customTo, setCustomTo] = useState('');
   const [customOpen, setCustomOpen] = useState(false);
   const customWrapRef = useRef<HTMLDivElement>(null);
+  // Branch rows feeding the "Branch" dropdown, plus the currently chosen one.
+  const [branchList, setBranchList] = useState<{ slug: string; city: string }[]>([]);
+  const [selectedBranch, setSelectedBranch] = useState('');
 
+  // Close the custom-range calendars when clicking anywhere outside them.
   useEffect(() => {
     if (!customOpen) return;
     const onMouseDown = (e: MouseEvent) => {
@@ -143,14 +153,26 @@ export function BookingTab({ branch }: { branch?: string }) {
     return () => document.removeEventListener('mousedown', onMouseDown);
   }, [customOpen]);
 
+  // Fetch bookings (plus the branch list) from the admin API; `silent` skips the
+  // full-screen spinner so the same function can power the Refresh button. The
+  // GET handler auto-cancels overdue (past-dated) bookings before returning.
   const load = useCallback(async (silent = false) => {
     if (silent) setRefreshing(true);
     else { setLoading(true); setError(''); }
     try {
-      const res = await fetch('/api/admin/bookings', { cache: 'no-store' });
+      const [res, branchRes] = await Promise.all([
+        fetch('/api/admin/bookings', { cache: 'no-store' }),
+        fetch('/api/admin/branches', { cache: 'no-store' }),
+      ]);
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const data = await res.json();
       setBookings(Array.isArray(data.items) ? data.items : []);
+      if (branchRes.ok) {
+        const branchData = await branchRes.json();
+        setBranchList(Array.isArray(branchData.items)
+          ? branchData.items.map((b: { slug: string; city: string }) => ({ slug: b.slug, city: b.city }))
+          : []);
+      }
     } catch {
       if (!silent) setError('Could not load bookings — are you signed in?');
     } finally {
@@ -158,6 +180,7 @@ export function BookingTab({ branch }: { branch?: string }) {
       else setLoading(false);
     }
   }, []);
+  // Load once on mount, and jump back to page 1 whenever a filter changes.
   useEffect(() => { load(); }, [load]);
   useEffect(() => { setPage(1); }, [view, search, dateFilter, customDate, listStatus]);
 
@@ -165,6 +188,15 @@ export function BookingTab({ branch }: { branch?: string }) {
   const scopedBookings = useMemo(
     () => (branch ? bookings.filter((b) => b.branch?.toLowerCase() === branch.toLowerCase()) : bookings),
     [bookings, branch]
+  );
+
+  // The Branch sub-view further scopes analytics to the dropdown's chosen branch.
+  const analyticsBookings = useMemo(
+    () =>
+      view === 'branch' && selectedBranch
+        ? scopedBookings.filter((b) => b.branch?.toLowerCase() === selectedBranch.toLowerCase())
+        : scopedBookings,
+    [scopedBookings, view, selectedBranch]
   );
 
   // ── Compute analytics ──────────────────────────────────────────────────
@@ -184,11 +216,11 @@ export function BookingTab({ branch }: { branch?: string }) {
     // Bucket keys for the period.
     const allKeys: string[] = [];
     if (period === 'total') {
-      const months = new Set(scopedBookings.map((b) => b.date.slice(0, 7)));
+      const months = new Set(analyticsBookings.map((b) => b.date.slice(0, 7)));
       allKeys.push(...[...months].sort());
     } else if (period === 'custom') {
       if (customFrom || customTo) {
-        const from = customFrom || scopedBookings.map((b) => b.date).sort()[0] || todayISO();
+        const from = customFrom || analyticsBookings.map((b) => b.date).sort()[0] || todayISO();
         const to = customTo || todayISO();
         const d = new Date(from + 'T00:00:00Z');
         while (d.toISOString().split('T')[0] <= to) {
@@ -204,13 +236,13 @@ export function BookingTab({ branch }: { branch?: string }) {
       const d = new Date(now);
       for (let m = 0; m <= d.getUTCMonth(); m++) allKeys.push(`${d.getUTCFullYear()}-${String(m + 1).padStart(2, '0')}`);
     } else {
-      const years = new Set(scopedBookings.map((b) => b.date.slice(0, 4)));
+      const years = new Set(analyticsBookings.map((b) => b.date.slice(0, 4)));
       allKeys.push(...[...years].sort());
     }
 
     // Per-bucket counts by status (whole window, before status filter).
     const bucketCounts = new Map<string, { total: number; pending: number; confirmed: number; completed: number; cancelled: number }>();
-    for (const b of scopedBookings) {
+    for (const b of analyticsBookings) {
       if (!inWindow(b.date)) continue;
       const k = trendKey(b.date, period);
       const e = bucketCounts.get(k) ?? { total: 0, pending: 0, confirmed: 0, completed: 0, cancelled: 0 };
@@ -251,7 +283,7 @@ export function BookingTab({ branch }: { branch?: string }) {
     ];
 
     return { total, statusCounts, statusData, bucketed, bookingsTrend };
-  }, [scopedBookings, period, trendStatus, customFrom, customTo]);
+  }, [analyticsBookings, period, trendStatus, customFrom, customTo]);
 
   // ── List filtering (search + date preset, All/Today Bookings views) ─────
   const filteredBookings = useMemo(() => {
@@ -261,28 +293,37 @@ export function BookingTab({ branch }: { branch?: string }) {
         ? periodWindow(activeFilter)
         : null;
     const q = search.trim().toLowerCase();
-    return scopedBookings.filter((b) => {
-      if (activeFilter === 'today') {
-        if (b.date !== todayISO()) return false;
-      } else if (activeFilter === 'custom') {
-        if (!customDate || b.date !== customDate) return false;
-      } else if (win) {
-        if (b.date < win.start || b.date > win.end) return false;
-      }
-      if (q) {
-        const hay = `${b.clientName} ${b.clientEmail} ${b.serviceName} ${b.stylistName || ''} ${b.date} ${b.time}`.toLowerCase();
-        if (!hay.includes(q)) return false;
-      }
-      if (listStatus !== 'all' && b.status !== listStatus) return false;
-      return true;
-    });
+    const today = todayISO();
+    return scopedBookings
+      .filter((b) => {
+        // The default ("All dates") list starts at the present day and
+        // goes onward — past days are excluded (they auto-cancel anyway).
+        if (activeFilter === 'all' && b.date < today) return false;
+        if (activeFilter === 'today') {
+          if (b.date !== today) return false;
+        } else if (activeFilter === 'custom') {
+          if (!customDate || b.date !== customDate) return false;
+        } else if (win) {
+          if (b.date < win.start || b.date > win.end) return false;
+        }
+        if (q) {
+          const hay = `${b.clientName} ${b.clientEmail} ${b.serviceName} ${b.stylistName || ''} ${b.date} ${b.time}`.toLowerCase();
+          if (!hay.includes(q)) return false;
+        }
+        if (listStatus !== 'all' && b.status !== listStatus) return false;
+        return true;
+      })
+      .sort((a, b) => `${a.date} ${a.time}`.localeCompare(`${b.date} ${b.time}`));
   }, [scopedBookings, search, dateFilter, customDate, view, listStatus]);
 
   // ── Status update / delete ─────────────────────────────────────────────
+  // PATCH the new status; on success update that row in local state so the UI
+  // reflects the change immediately without a full reload.
   const updateStatus = async (id: string, status: BookingRow['status']) => {
     const res = await fetch('/api/admin/bookings', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id, patch: { status } }) });
     if (res.ok) setBookings((prev) => prev.map((b) => (b.id === id ? { ...b, status } : b)));
   };
+  // DELETE the target booking after confirmation, then drop it from local state.
   const remove = async () => {
     if (!deleteTarget || deleting) return;
     setDeleting(true);
@@ -335,6 +376,7 @@ export function BookingTab({ branch }: { branch?: string }) {
     { label: 'Cancelled',      value: fmt(stats.statusCounts.cancelled || 0), icon: XCircle, dataKey: 'cancelled' },
   ];
 
+  // Pagination math: clamp the page to a valid range and slice out this page.
   const totalPages = Math.max(1, Math.ceil(filteredBookings.length / PAGE_SIZE));
   const currentPage = Math.min(page, totalPages);
   const pageStart = (currentPage - 1) * PAGE_SIZE;
@@ -349,8 +391,25 @@ export function BookingTab({ branch }: { branch?: string }) {
             <TabsTrigger value="analytics" className="text-[10px] px-2 h-6">Analytics</TabsTrigger>
             <TabsTrigger value="list" className="text-[10px] px-2 h-6">All Bookings</TabsTrigger>
             <TabsTrigger value="today" className="text-[10px] px-2 h-6">Today Bookings</TabsTrigger>
+            {!branch && <TabsTrigger value="branch" className="text-[10px] px-2 h-6">Branch</TabsTrigger>}
           </TabsList>
         </Tabs>
+        {view === 'branch' && !branch && (
+          <select
+            value={selectedBranch}
+            onChange={(e) => setSelectedBranch(e.target.value)}
+            className="h-8 px-2 text-[11px] font-medium rounded-md border border-border bg-card text-foreground outline-none cursor-pointer"
+            aria-label="Filter by branch"
+          >
+            <option value="">All branches</option>
+            {(branchList.length
+              ? branchList
+              : [...new Set(scopedBookings.map((b) => b.branch).filter(Boolean) as string[])].map((slug) => ({ slug, city: slug.toUpperCase() }))
+            ).map((br) => (
+              <option key={br.slug} value={br.slug}>{br.city}</option>
+            ))}
+          </select>
+        )}
         <button
           type="button"
           onClick={() => setAddOpen(true)}
@@ -358,7 +417,7 @@ export function BookingTab({ branch }: { branch?: string }) {
         >
           <Plus className="w-3.5 h-3.5" /> Add Booking
         </button>
-        {view === 'analytics' && (
+        {(view === 'analytics' || view === 'branch') && (
           <div className="relative flex justify-end" ref={customWrapRef}>
             <Tabs value={period} onValueChange={(v) => { const next = v as BookingPeriod; setPeriod(next); if (next !== 'custom') setCustomOpen(false); }}>
               <TabsList className="h-8">
@@ -380,7 +439,7 @@ export function BookingTab({ branch }: { branch?: string }) {
         )}
       </div>
 
-      {view === 'analytics' ? (
+      {view === 'analytics' || view === 'branch' ? (
         /* ── Analytics grid ── */
         <div className="grid grid-cols-4 grid-rows-[repeat(6,minmax(0,1fr))] gap-4 flex-1 min-h-0">
           {/* KPI cards */}

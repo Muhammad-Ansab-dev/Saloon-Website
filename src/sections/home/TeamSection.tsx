@@ -13,6 +13,7 @@ import { useSiteContent } from '@/hooks/useSiteContent';
 import { STYLIST_IMAGE_BY_ID } from '@/data/salonData';
 
 export const TeamSection: React.FC = () => {
+  // Stylist roster from the live store (admin-editable), static STYLISTS as fallback.
   const { stylists } = useSiteContent();
 
   return (
@@ -43,6 +44,7 @@ export const TeamSection: React.FC = () => {
       <div className="w-full overflow-x-auto snap-x snap-mandatory px-5 sm:px-5 lg:px-5 pb-4 scroll-smooth [scrollbar-width:thin] [&::-webkit-scrollbar]:h-[10px] [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-black/40 [&::-webkit-scrollbar-thumb]:rounded-full">
         <div className="flex gap-[30px] mx-[30px]">
           {stylists.map((stylist, idx) => (
+            // Cards alternate entrance direction and stack with a slight delay per row.
             <SpringReveal
               key={stylist.id}
               direction={idx % 2 === 0 ? 'left' : 'right'}

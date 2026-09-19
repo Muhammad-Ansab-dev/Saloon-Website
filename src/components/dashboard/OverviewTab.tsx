@@ -49,8 +49,12 @@ const sparkConfig = {
   avg:       { label: 'Avg Value', color: 'oklch(0.637 0.237 25.331)' },
 } satisfies ChartConfig;
 
+// Formats a number as British pounds — the site's revenue currency.
 const gbp = (n: number) => '£' + n.toLocaleString('en-GB');
 
+// Bins a booking by the current period: month (total/monthly), day (daily/
+// custom), week-starting-Monday (weekly), or year (yearly). Consistent keys
+// keep the buckets calendar-aligned and sortable chronologically.
 function bucketKey(date: string, period: RevenuePeriod): string {
   if (period === 'custom') return date.slice(0, 10);
   if (period === 'total' || period === 'monthly') return date.slice(0, 7);
@@ -63,6 +67,8 @@ function bucketKey(date: string, period: RevenuePeriod): string {
   return String(d.getUTCFullYear());
 }
 
+// Converts a bucket key into a short label for the chart axis (e.g. "Mon",
+// "Sep 1", "Sep"). "Yearly" keys are just the year, passed through.
 function bucketLabel(key: string, period: RevenuePeriod): string {
   if (period === 'custom' || period === 'daily') return new Date(key + 'T00:00:00Z').toLocaleDateString('en-US', { weekday: 'short' });
   if (period === 'weekly') return new Date(key + 'T00:00:00Z').toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
@@ -71,12 +77,15 @@ function bucketLabel(key: string, period: RevenuePeriod): string {
 }
 
 export function OverviewTab({ branch }: { branch?: string }) {
+  // The active revenue period and (for "Custom") the from/to dates, plus whether
+  // the inline calendar pair is visible. customWrapRef detects outside clicks.
   const [period, setPeriod] = useState<RevenuePeriod>('total');
   const [customFrom, setCustomFrom] = useState('');
   const [customTo, setCustomTo] = useState('');
   const [customOpen, setCustomOpen] = useState(false);
   const customWrapRef = useRef<HTMLDivElement>(null);
 
+  // Close the custom-range calendars when clicking anywhere outside them.
   useEffect(() => {
     if (!customOpen) return;
     const onMouseDown = (e: MouseEvent) => {
@@ -85,11 +94,13 @@ export function OverviewTab({ branch }: { branch?: string }) {
     document.addEventListener('mousedown', onMouseDown);
     return () => document.removeEventListener('mousedown', onMouseDown);
   }, [customOpen]);
+  // Raw bookings and services pulled from the admin API, plus load/error flags.
   const [bookings, setBookings] = useState<BookingRow[]>([]);
   const [services, setServices] = useState<ServiceRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
+  // Fetch bookings + services in parallel; the revenue math keys off service price.
   const load = useCallback(async () => {
     setLoading(true);
     setError('');
@@ -118,6 +129,7 @@ export function OverviewTab({ branch }: { branch?: string }) {
     [bookings, branch]
   );
 
+  // Fast lookup from service id → price, used when valuing each booking.
   const priceMap = useMemo(
     () => Object.fromEntries(services.map((s) => [s.id, s.price])),
     [services]
@@ -131,6 +143,7 @@ export function OverviewTab({ branch }: { branch?: string }) {
     const win = period === 'custom'
       ? (customFrom || customTo ? { start: customFrom || '0000-01-01', end: customTo || '9999-12-31' } : null)
       : periodWindow(period, now);
+    // True when a booking's date falls inside the selected period's window.
     const inWindow = (date: string) => {
       if (period === 'custom' && !win) return false;
       return (!win || (date >= win.start && date <= win.end));
@@ -209,6 +222,7 @@ export function OverviewTab({ branch }: { branch?: string }) {
     <div className="py-20 px-6 text-center text-sm text-muted-foreground">{error}</div>
   );
 
+  // Fall back to a single "No data" point so the area chart never renders empty.
   const selectedTrend = stats.bucketed && stats.bucketed.length
     ? stats.bucketed
     : [{ key: '', label: 'No data', revenue: 0, bookings: 0, clients: 0, avg: 0 }];

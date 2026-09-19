@@ -7,12 +7,19 @@
 //
 // Env: SMTP_HOST, SMTP_PORT (default 465), SMTP_USER, SMTP_PASS,
 //      MAIL_FROM (default: `Paul Hair Studio <SMTP_USER>`).
+// In plain words: when someone books an appointment, this file can email the
+// client a little confirmation. Email is optional — unless SMTP is set up,
+// nothing is sent and nothing on the site breaks.
 // ─────────────────────────────────────────────────────────────
 import nodemailer from 'nodemailer';
 import { formatTime12h } from './bookingTime';
 
+// Outcome of a send attempt: 'sent' (delivered), 'skipped' (SMTP not set up /
+// no recipient), or 'error' (the SMTP server rejected the send).
 export type EmailResult = 'sent' | 'skipped' | 'error';
 
+// The booking details that appear in the confirmation email. Every field is
+// optional because a booking might be missing bits of information.
 export interface BookingEmailDetails {
   clientEmail?: string;
   clientName?: string;
@@ -22,7 +29,10 @@ export interface BookingEmailDetails {
   time?: string;
 }
 
-/** Real send path — returns 'skipped' when SMTP is not configured. */
+// Compose and send the booking-confirmation email via SMTP. Params: booking —
+// the client/service/date/time details to mention. Returns 'sent' on success,
+// 'skipped' when SMTP isn't configured or there is no recipient address, and
+// 'error' if nodemailer throws. Site behaviour is unchanged when email isn't set up.
 export async function sendBookingConfirmationEmail(
   booking: BookingEmailDetails
 ): Promise<EmailResult> {
@@ -31,6 +41,8 @@ export async function sendBookingConfirmationEmail(
   const pass = process.env.SMTP_PASS?.trim();
   const to = booking.clientEmail?.trim();
 
+  // Email is opt-in: with SMTP missing or no recipient we quietly skip rather
+  // than fail the booking flow.
   if (!host || !user || !pass || !to) return 'skipped';
 
   const port = Number(process.env.SMTP_PORT?.trim() || '465');
@@ -39,6 +51,8 @@ export async function sendBookingConfirmationEmail(
   const salutation = booking.clientName?.trim() || 'there';
   const time12 = formatTime12h(booking.time || '');
 
+  // Plain-text body — the same details as the HTML version below, so the email
+  // reads fine in any client (no HTML needed).
   const text = [
     `Hi ${salutation},`,
     '',
@@ -84,6 +98,8 @@ export async function sendBookingConfirmationEmail(
     await transporter.sendMail({ from, to, subject: 'Your booking at Paul Hair Studio is confirmed', text, html });
     return 'sent';
   } catch (err) {
+    // Log and report 'error' so the caller can decide whether to surface it;
+    // the actual booking is still saved regardless of the email outcome.
     console.error('[email] confirmation email failed to send', err);
     return 'error';
   }

@@ -29,6 +29,7 @@ type Category = { name: string; stylists: string[] };
 
 type StylistOption = { id: string; name: string };
 
+// Thin fetch wrapper with consistent error surfacing (401 → sign-in message).
 async function api(path: string, init: RequestInit): Promise<Record<string, unknown>> {
   const res = await fetch(path, init);
   if (!res.ok) {
@@ -51,35 +52,38 @@ async function api(path: string, init: RequestInit): Promise<Record<string, unkn
 const HEADERS = { 'Content-Type': 'application/json' };
 
 export function ServicesPanel() {
+  // Root collections loaded from /api/content, plus load/error/busy flags that
+  // drive the spinner banners and the per-row spinner while a mutation runs.
   const [services, setServices] = useState<ServiceRow[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [stylists, setStylists] = useState<StylistOption[]>([]);
   const [loadState, setLoadState] = useState<LoadState>('loading');
   const [mutError, setMutError] = useState('');
   const [busyId, setBusyId] = useState<string | null>(null);
-
+  // deleteTarget = the service awaiting delete confirmation.
   const [deleteTarget, setDeleteTarget] = useState<ServiceRow | null>(null);
   const [deleting, setDeleting] = useState(false);
-
+  // Edit-modal fields; editTarget being set means the edit modal is open.
   const [editTarget, setEditTarget] = useState<ServiceRow | null>(null);
   const [editName, setEditName] = useState('');
   const [editPrice, setEditPrice] = useState('');
   const [editCategory, setEditCategory] = useState('');
   const [editImage, setEditImage] = useState('');
   const [savingEdit, setSavingEdit] = useState(false);
-
+  // Add-service modal fields.
   const [addOpen, setAddOpen] = useState(false);
   const [addName, setAddName] = useState('');
   const [addPrice, setAddPrice] = useState('');
   const [addCategory, setAddCategory] = useState('');
   const [addImage, setAddImage] = useState('');
   const [adding, setAdding] = useState(false);
-
+  // Add-category modal fields.
   const [addCatOpen, setAddCatOpen] = useState(false);
   const [addCatName, setAddCatName] = useState('');
   const [addCatStylists, setAddCatStylists] = useState<string[]>([]);
   const [addingCat, setAddingCat] = useState(false);
 
+  // Pull the live services, categories and stylist names from the content API.
   const load = useCallback(async () => {
     setLoadState('loading');
     try {
@@ -102,6 +106,7 @@ export function ServicesPanel() {
     load();
   }, [load]);
 
+  // POST a new service, close the modal, reset the inputs, and refresh.
   const create = async () => {
     if (!addName.trim() || adding) return;
     setAdding(true);
@@ -130,6 +135,7 @@ export function ServicesPanel() {
     }
   };
 
+  // POST a new category with its selected professionals, then refresh.
   const createCategory = async () => {
     if (!addCatName.trim() || addingCat) return;
     setAddingCat(true);
@@ -151,6 +157,8 @@ export function ServicesPanel() {
     }
   };
 
+  // PATCH only the fields the user actually edited (unchanged values are omitted),
+  // so the price/image never surprise-write. Then close the modal and refresh.
   const saveEdit = async () => {
     if (!editTarget || !editName.trim() || savingEdit) return;
     setSavingEdit(true);
@@ -180,6 +188,7 @@ export function ServicesPanel() {
     }
   };
 
+  // DELETE the confirmed service, then refresh the table.
   const remove = async () => {
     if (!deleteTarget || deleting) return;
     setDeleting(true);
@@ -201,6 +210,7 @@ export function ServicesPanel() {
     }
   };
 
+  // Header summary numbers for the toolbar badges.
   const counts = {
     total: services.length,
     categories: categories.length,

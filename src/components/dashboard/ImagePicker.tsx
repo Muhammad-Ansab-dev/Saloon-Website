@@ -22,10 +22,14 @@ interface ImagePickerProps {
 }
 
 export function ImagePicker({ value, onValue, label, className, disabled }: ImagePickerProps) {
+  // Hidden file input trigger + busy/error feedback for the upload lifecycle.
   const inputRef = useRef<HTMLInputElement>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
 
+  // Validate the file size, POST it to the upload endpoint (Cloudinary when
+  // configured, local data/uploads otherwise), and hand the returned URL back
+  // to the caller via onValue.
   async function handleFile(file: File | undefined) {
     if (!file) return;
     if (file.size > MAX_UPLOAD) {
